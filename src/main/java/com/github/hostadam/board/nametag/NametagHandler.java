@@ -13,6 +13,18 @@ public class NametagHandler {
         this.board = board.getScoreboard();
     }
 
+    public void replace(String oldTeamName, String newTeamName, String entry) {
+        Team team = this.getTeam(oldTeamName);
+        if(team != null) {
+            team.removeEntry(entry);
+        }
+
+        Team newTeam = this.getTeam(newTeamName);
+        if(newTeam != null) {
+            newTeam.addEntry(entry);
+        }
+    }
+
     private String peel(String name) {
         return name.split("-")[1];
     }

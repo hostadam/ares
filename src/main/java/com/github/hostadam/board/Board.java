@@ -2,6 +2,7 @@ package com.github.hostadam.board;
 
 import com.github.hostadam.board.nametag.NametagHandler;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -24,6 +25,7 @@ public class Board {
     private BukkitRunnable updateTask;
 
     private boolean sidebarVisibility = true;
+    @Setter
     private NametagHandler nametagHandler;
 
     public Board(JavaPlugin plugin, Player player, BoardAdapter adapter) {
@@ -35,7 +37,6 @@ public class Board {
         this.updateVisibility(true);
 
         player.setScoreboard(scoreboard);
-        this.nametagHandler = new NametagHandler(this);
     }
 
     public void setTab(String header, String footer) {
