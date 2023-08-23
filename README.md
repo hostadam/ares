@@ -2,6 +2,12 @@
 Ares is the utility library used for the upcoming Etheria SMP server.
 It aims to reduce clutter in the core plugin by moving utility classes and frameworks to a library as opposed to having it in a server plugin.
 
+### Important Information
+* Ares is currently in a pre-release state. 
+  * It's not production-ready; may contain bugs and otherwise lack features.
+* Ares is built and tested on 1.20.1.
+  * Older versions are not guaranteed to work but 1.17-1.19 are generally considered safe for Ares usage.
+
 ### Features
 * Highly-optimized Scoreboard API
 * Nametags API (for player list sorting / rank prefixes)
