@@ -31,9 +31,6 @@ If you wish to use Ares for your own server as a library, add to your project's 
 </dependency>
 ```
 
-### Important Note
-Ares is currently in a pre-release state. It's not production-ready; may contain bugs and otherwise lack features.
-
 ## Guidelines
 Below is a guideline for each framework to get you started. 
 It's recommended to experiment by yourself to get an understanding of how the different components work. If you need additional help, contact me on Discord @ Hostadam.
