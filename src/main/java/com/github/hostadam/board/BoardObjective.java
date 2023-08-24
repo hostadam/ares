@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Getter
 public class BoardObjective {
@@ -18,7 +20,8 @@ public class BoardObjective {
 
     private String title;
     private Map<Integer, String> lines;
-    private boolean shouldUpdate = false;
+    private final Map<String, Team> teams = new HashMap<>();
+    private boolean shouldUpdateTitle = false, shouldUpdateLines = false;
 
     public BoardObjective(Scoreboard scoreboard) {
         this.scoreboard = scoreboard;
@@ -29,7 +32,7 @@ public class BoardObjective {
 
     public void updateTitle(String title) {
         this.title = title;
-        this.shouldUpdate = true;
+        this.shouldUpdateTitle = true;
     }
 
     public void setVisible(boolean visible) {
@@ -41,11 +44,11 @@ public class BoardObjective {
     }
 
     public void updateLines(List<String> lines) {
-        if(lines.size() != this.lines.size()) {
+        if(!this.lines.equals(lines)) {
             this.lines.clear();
 
             if(lines.isEmpty()) {
-                this.shouldUpdate = true;
+                this.shouldUpdateLines = true;
                 return;
             }
         }
@@ -60,28 +63,26 @@ public class BoardObjective {
         String currentLine = this.lines.get(lineNumber);
         if(currentLine == null || !currentLine.equals(line)) {
             this.lines.put(lineNumber, line);
-            this.shouldUpdate = true;
+            this.shouldUpdateLines = true;
         }
     }
 
     public void update() {
-        if(!this.shouldUpdate) return;
+        if(shouldUpdateTitle) {
+            this.objective.setDisplayName(this.title);
+            this.shouldUpdateTitle = false;
+        }
 
         this.lines.forEach((index, line) -> {
             String name = "§" + ChatColor.values()[index].getChar();
 
-            Team team = this.scoreboard.getTeam(name);
-            if(team == null) {
-                team = this.scoreboard.registerNewTeam(name);
-            }
-
+            Team team = this.teams.computeIfAbsent(name, t -> scoreboard.registerNewTeam(t));
             team.setPrefix(line);
 
             if(!team.hasEntry(name)) team.addEntry(name);
             objective.getScore(name).setScore(index);
         });
 
-        this.objective.setDisplayName(this.title);
-        this.shouldUpdate = false;
+        this.shouldUpdateLines = false;
     }
 }
