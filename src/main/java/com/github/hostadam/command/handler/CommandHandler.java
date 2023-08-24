@@ -1,6 +1,6 @@
 package com.github.hostadam.command.handler;
 
-import com.github.hostadam.command.Command;
+import com.github.hostadam.command.AresCommand;
 import com.github.hostadam.command.ParameterConverter;
 import com.github.hostadam.command.impl.BukkitCommand;
 import com.github.hostadam.command.impl.CommandImpl;
@@ -46,11 +46,11 @@ public class CommandHandler {
     public void register(Object object) {
         if(this.map == null) return;
         for(Method method : object.getClass().getMethods()) {
-            if(!method.isAnnotationPresent(Command.class)) {
+            if(!method.isAnnotationPresent(AresCommand.class)) {
                 continue;
             }
 
-            Command command = method.getAnnotation(Command.class);
+            AresCommand command = method.getAnnotation(AresCommand.class);
             CommandImpl impl = new CommandImpl(command, method, object);
             String name = command.labels()[0];
 

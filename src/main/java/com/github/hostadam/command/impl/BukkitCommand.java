@@ -1,8 +1,9 @@
 package com.github.hostadam.command.impl;
 
-import com.github.hostadam.command.Command;
+import com.github.hostadam.command.AresCommand;
 import com.github.hostadam.command.ParameterConverter;
 import com.github.hostadam.command.handler.CommandHandler;
+import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
 import java.lang.reflect.InvocationTargetException;
@@ -11,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class BukkitCommand extends org.bukkit.command.Command {
+public class BukkitCommand extends Command {
 
     protected final CommandHandler commandHandler;
     private final CommandImpl impl;
@@ -26,7 +27,7 @@ public class BukkitCommand extends org.bukkit.command.Command {
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
-        final Command command = this.impl.getCommand();
+        final AresCommand command = this.impl.getCommand();
         if(!command.target().testFor(sender)) {
             return true;
         }
