@@ -1,6 +1,6 @@
 # Ares
-Ares is the utility library used for the upcoming Etheria SMP server.
-It aims to reduce clutter in the core plugin by moving utility classes and frameworks to a library as opposed to having it in a server plugin.
+Ares is the utility plugin used for the upcoming Etheria SMP server.
+It aims to reduce clutter in the core plugin by moving utility classes and frameworks to a common plugin.
 
 ### Important Information
 * Ares is currently in a pre-release state. 
@@ -90,3 +90,60 @@ Player player = event.getPlayer();
 Board board = new Board(YOUR PLUGIN HERE, player, this.adapter);
 board.setNametagHandler(YOUR HANDLER);
 ```
+
+## Command API
+The command API is aimed to be simple and convenient to developers. It's annotation-based with automatic parameter conversion.
+How does it work?
+
+We need to start by creating a command:
+```
+public class FeedCommand {
+
+    @AresCommand(
+            labels = { "feed", "f" },
+            description = "Feed another player",
+            requiredArgs = 1,
+            usage = "<player>",
+            permission = "ares.feed"
+    )
+    public void feed(CommandSender sender, Player target) {
+       target.setFoodLevel(20);
+    }
+}
+```
+The first parameter, CommandSender, must be present in the method parameters for the command to work.
+Any parameters after that is optional. If you wish to add, let's say, an optional argument ```int feedAmount```, then you can add ```String[] args``` to your parameters and use those, with ```args[0]``` returning the first argument.
+```
+@AresCommand(
+        labels = { "feed", "f" },
+        description = "Feed another player",
+        requiredArgs = 1,
+        usage = "<player> [feedAmount]",
+        permission = "ares.feed"
+)
+public void feed(CommandSender sender, Player target, String[] args) {
+    int feedAmount = args.length > 0 ? Integer.parseInt(args[0]) : 20;
+    target.setFoodLevel(feedAmount);
+}
+```
+
+To register the command, get the command handler and register:
+```
+CommandHandler commandHandler = new CommandHandler();
+commandHandler.register(new FeedCommand());
+```
+
+#### Subcommands
+Same structure as above, except for labels:
+```
+@AresCommand(
+       labels = { "feed example" },
+       description = "Example subcommand to feed",
+       requiredArgs = 1,
+       usage = "<player>",
+       permission = "ares.feed"
+)
+```
+Register the sub command in the same way as above. Just ensure that your main command (feed) is registered **before** subcommands.
+
+
