@@ -2,7 +2,7 @@ package com.github.hostadam.command.handler;
 
 import com.github.hostadam.command.AresCommand;
 import com.github.hostadam.command.ParameterConverter;
-import com.github.hostadam.command.impl.BukkitCommand;
+import com.github.hostadam.command.impl.CommandData;
 import com.github.hostadam.command.impl.CommandImpl;
 import com.github.hostadam.command.parameter.BooleanConverter;
 import com.github.hostadam.command.parameter.IntConverter;
@@ -12,6 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.command.CommandMap;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Field;
@@ -22,7 +23,7 @@ public class CommandHandler {
 
     private CommandMap map;
     private final Map<Class<?>, ParameterConverter<?>> parameters;
-    private final Map<String, BukkitCommand> commands;
+    private final Map<String, CommandImpl> commands;
 
     public CommandHandler() {
         this.parameters = new HashMap<>();
@@ -46,32 +47,33 @@ public class CommandHandler {
     public void register(Object object) {
         if(this.map == null) return;
         for(Method method : object.getClass().getMethods()) {
-            if(!method.isAnnotationPresent(AresCommand.class)) {
+            if(!method.isAnnotationPresent(AresCommand.class)
+                    || method.getParameterCount() < 1
+                    || method.getParameters()[0].getType() != CommandSender.class) {
                 continue;
             }
 
             AresCommand command = method.getAnnotation(AresCommand.class);
-            CommandImpl impl = new CommandImpl(command, method, object);
+            CommandData data = new CommandData(command, method, object);
             String name = command.labels()[0];
 
             if(name.contains(" ")) {
                 String[] split = name.split(" ");
-                BukkitCommand parentCommand = this.getCommandByLabel(split[0]);
-                if(parentCommand != null) parentCommand.addSubCommand(impl);
+                CommandImpl parentCommand = this.getCommandByLabel(split[0]);
+                if(parentCommand != null) parentCommand.addSubCommand(data);
             } else {
                 List<String> aliases = new ArrayList<>();
                 if(command.labels().length > 1) {
                     aliases.addAll(List.of(Arrays.copyOfRange(command.labels(), 1, command.labels().length)));
                 }
 
-                BukkitCommand bukkitCommand = new BukkitCommand(this, impl, name, command.description(), command.usage(), aliases);
-                this.map.register(name, bukkitCommand);
-                aliases.forEach(alias -> this.commands.put(alias, bukkitCommand));
+                CommandImpl impl = new CommandImpl(this, data);
+                this.map.register(name, impl);
             }
         }
     }
 
-    public BukkitCommand getCommandByLabel(String name) {
+    public CommandImpl getCommandByLabel(String name) {
         return this.commands.get(name);
     }
 

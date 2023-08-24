@@ -1,0 +1,4 @@
+name: Ares
+version: 0.1
+api-version: 1.17
+main: com.github.hostadam.AresPlugin

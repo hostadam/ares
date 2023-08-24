@@ -31,12 +31,12 @@ public class NametagHandler {
 
     public Team getTeam(String name) {
        if(this.board == null) return null;
-       return this.board.getTeam(this.peel(name));
+       String peel = (name.contains("-") ? this.peel(name) : name);
+       return this.board.getTeam(peel);
     }
 
     public Team createTeam(String teamName, int priority) {
-        String peeled = this.peel(teamName);
-        Team team = this.getTeam(peeled);
+        Team team = this.getTeam(teamName);
         if(team != null) {
             return team;
         }
