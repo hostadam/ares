@@ -18,7 +18,7 @@ It aims to reduce clutter in the core plugin by moving utility classes and frame
 ### For developers
 If you wish to use Ares for your own server as a library, add to your project's pom.xml:
 
-```
+```java
 <repository>
     <id>jitpack.io</id>
     <url>https://jitpack.io</url>
