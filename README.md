@@ -18,7 +18,7 @@ It aims to reduce clutter in the core plugin by moving utility classes and frame
 ### For developers
 If you wish to use Ares for your own server as a library, add to your project's pom.xml:
 
-```java
+```
 <repository>
     <id>jitpack.io</id>
     <url>https://jitpack.io</url>
@@ -42,7 +42,7 @@ A note to remember is that Ares automatically updates the scoreboard every 2 tic
 Ares is made for performance; only when something on the scoreboard changes will it call for an update. 
 
 Begin by creating an adapter for your scoreboard:
-```
+```java
 public class DefaultBoardAdapter implements BoardAdapter {
     @Override
     public String title(Player player) {
@@ -62,7 +62,7 @@ public class DefaultBoardAdapter implements BoardAdapter {
 ```
 
 Save the adapter to use for player handling:
-```
+```java
 public class PlayerListener implements Listener {
 
     private final BoardAdapter adapter;
@@ -85,7 +85,7 @@ For nametags, Ares has no default handler, so you need to make your own ```Namet
 Provided methods within the ```NametagHandler``` are ```getTeam(String name)```, ```replace(String oldTeamName, String newTeamName, String playerEntry)```, ```createTeam(String name, int priority)```. We recommend using priorities between 0-26 (based of the alphabet) with 0 being highest priority.
 
 When you've created the handler, go back to your previous ```PlayerListener``` and change/add the following code:
-```
+```java
 Player player = event.getPlayer();
 Board board = new Board(YOUR PLUGIN HERE, player, this.adapter);
 board.setNametagHandler(YOUR HANDLER);
@@ -96,7 +96,7 @@ The command API is aimed to be simple and convenient to developers. It's annotat
 How does it work?
 
 We need to start by creating a command:
-```
+```java
 public class FeedCommand {
 
     @AresCommand(
@@ -113,7 +113,7 @@ public class FeedCommand {
 ```
 The first parameter, CommandSender, must be present in the method parameters for the command to work.
 Any parameters after that is optional. If you wish to add, let's say, an optional argument ```int feedAmount```, then you can add ```String[] args``` to your parameters and use those, with ```args[0]``` returning the first argument.
-```
+```java
 @AresCommand(
         labels = { "feed", "f" },
         description = "Feed another player",
@@ -128,14 +128,14 @@ public void feed(CommandSender sender, Player target, String[] args) {
 ```
 
 To register the command, get the command handler and register:
-```
+```java
 CommandHandler commandHandler = new CommandHandler();
 commandHandler.register(new FeedCommand());
 ```
 
 #### Subcommands
 Same structure as above, except for labels:
-```
+```java
 @AresCommand(
        labels = { "feed example" },
        description = "Example subcommand to feed",
