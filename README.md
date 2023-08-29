@@ -11,9 +11,9 @@ It aims to reduce clutter in the core plugin by moving utility classes and frame
 ### Features
 * Highly-optimized Scoreboard API
 * Nametags API (for player list sorting / rank prefixes)
-* Common utilities
-* *(Coming Soon)* Annotation-based command API
+* Annotation-based command API
 * *(Coming Soon)* Menu API with pages support
+* Common utilities
 
 ### For developers
 If you wish to use Ares for your own server as a library, add to your project's pom.xml:
