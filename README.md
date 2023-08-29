@@ -42,7 +42,7 @@ A note to remember is that Ares automatically updates the scoreboard every 2 tic
 Ares is made for performance; only when something on the scoreboard changes will it call for an update. 
 
 Begin by creating an adapter for your scoreboard:
-```java
+``` Java
 public class DefaultBoardAdapter implements BoardAdapter {
     @Override
     public String title(Player player) {
