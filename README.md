@@ -1,6 +1,5 @@
 # Ares
-Ares is the utility plugin used for the upcoming Etheria SMP server.
-It aims to reduce clutter in the core plugin by moving utility classes and frameworks to a common plugin.
+Ares is a plugin library designed to provide developers with easy access to multiple frameworks and utilities.
 
 ### Important Information
 * Ares is currently in a pre-release state. 
@@ -12,7 +11,7 @@ It aims to reduce clutter in the core plugin by moving utility classes and frame
 * Highly-optimized Scoreboard API
 * Nametags API (for player list sorting / rank prefixes)
 * Annotation-based command API
-* *(Coming Soon)* Menu API with pages support
+* Menu API with pages support
 * Common utilities
 
 ### For developers
@@ -27,8 +26,38 @@ If you wish to use Ares for your own server as a library, add to your project's 
 <dependency>
     <groupId>com.github.hostadam</groupId>
     <artifactId>ares</artifactId>
-    <version>0.2</version>
+    <version>0.6</version>
 </dependency>
+```
+
+Then, you need to make sure Ares is included in your build, so shade it:
+```
+<build>
+  <plugins>
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-shade-plugin</artifactId>
+      <version>3.1.0</version>
+      <configuration>
+        <relocations>
+          <relocation>
+            <pattern>com.github.hostadam</pattern>
+            <!-- Replace this with your package! -->
+            <shadedPattern>your.package</shadedPattern>
+          </relocation>
+        </relocations>
+      </configuration>
+      <executions>
+        <execution>
+          <phase>package</phase>
+          <goals>
+            <goal>shade</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+  </plugins>
+</build>
 ```
 
 ## Guidelines
