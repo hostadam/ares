@@ -69,6 +69,7 @@ public class CommandHandler {
 
                 CommandImpl impl = new CommandImpl(this, data);
                 this.map.register(name, impl);
+                this.commands.put(name, impl);
             }
         }
     }

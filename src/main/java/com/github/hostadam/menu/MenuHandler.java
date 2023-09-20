@@ -1,11 +1,13 @@
 package com.github.hostadam.menu;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +15,12 @@ import java.util.UUID;
 
 public class MenuHandler implements Listener {
 
-    private final Map<UUID, Menu> openMenus = new HashMap<>();
+    private final Map<UUID, Menu> openMenus;
+
+    public MenuHandler(JavaPlugin plugin) {
+        this.openMenus = new HashMap<>();
+        Bukkit.getPluginManager().registerEvents(this, plugin);
+    }
 
     public void openMenu(Player player, Menu menu) {
         menu.open();
