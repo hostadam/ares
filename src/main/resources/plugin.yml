@@ -1,4 +1,4 @@
 name: Ares
-version: '${PROJECT.VERSION}'
+version: 0.5
 api-version: 1.17
-main: com.github.hostadam.AresPlugin
+main: com.github.hostadam.Ares
