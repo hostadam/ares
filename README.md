@@ -26,7 +26,7 @@ If you wish to use Ares for your own server as a library, add to your project's 
 <dependency>
     <groupId>com.github.hostadam</groupId>
     <artifactId>ares</artifactId>
-    <version>0.6</version>
+    <version>0.6.1</version>
 </dependency>
 ```
 
@@ -64,12 +64,28 @@ Then, you need to make sure Ares is included in your build, so shade it:
 Below is a guideline for each framework to get you started. 
 It's recommended to experiment by yourself to get an understanding of how the different components work. If you need additional help, contact me on Discord @ Hostadam.
 
+## Initializing Ares
+Ares needs a plugin to rely on, so you need to make sure Ares is initialized properly.
+``` Java
+public class YourPlugin extends JavaPlugin {
+
+    @Override
+    public void onEnable() {
+        Ares.init(this);
+    }
+}
+```
+After it's been initialized, you can retrieve Ares with ```Ares.get();```.
+
 ## Scoreboard API
-The scoreboard functionality is built into Ares. All you need to do is add player handling, and the scoreboard adapter for what lines, title and tab to show.
-A note to remember is that Ares automatically updates the scoreboard every 2 ticks - this is the optimal value for performance and results.
+The scoreboard framework is all built into Ares. All you need to implement a scoreboard adapter for what lines, title and tab to show.
 
-Ares is made for performance; only when something on the scoreboard changes will it call for an update. 
+### Features
+* Support for custom tab header & tab footer
+* Automatic scoreboard updating
+* Optimized for performance - will only update when it's necessary.
 
+### How to use
 Begin by creating an adapter for your scoreboard:
 ``` Java
 public class DefaultBoardAdapter implements BoardAdapter {
@@ -89,35 +105,24 @@ public class DefaultBoardAdapter implements BoardAdapter {
     }
 }
 ```
-
-Save the adapter to use for player handling:
+Then, register your adapter:
 ``` Java
-public class PlayerListener implements Listener {
-
-    private final BoardAdapter adapter;
-
-    public PlayerListener() {
-        this.adapter = new DefaultBoardAdapter();
-    }
-
-    @EventHandler
-    public void onJoin(PlayerJoinEvent event) {
-        if(this.adapter == null) return;
-
-        Player player = event.getPlayer();
-        new Board(YOUR PLUGIN HERE, player, this.adapter);
-    }
+Ares ares = Ares.get();
+ares.setScoreboardAdapter(YOUR ADAPTER);
 ```
-The initialization of the scoreboard and the update task is automatically handled, so now we're done!
+And we are done!
 
 For nametags, Ares has no default handler, so you need to make your own ```NametagHandler``` and implement it yourself. 
 Provided methods within the ```NametagHandler``` are ```getTeam(String name)```, ```replace(String oldTeamName, String newTeamName, String playerEntry)```, ```createTeam(String name, int priority)```. We recommend using priorities between 0-26 (based of the alphabet) with 0 being highest priority.
 
-When you've created the handler, go back to your previous ```PlayerListener``` and change/add the following code:
-``` Java
-Player player = event.getPlayer();
-Board board = new Board(YOUR PLUGIN HERE, player, this.adapter);
-board.setNametagHandler(YOUR HANDLER);
+And to use your NametagHandler, create an event listener like below:
+```
+@EventHandler
+public void onJoin(PlayerJoinEvent event) {
+    Ares ares = Ares.get();
+    Board board = ares.getScoreboard(event.getPlayer());
+    board.setNametagHandler(YOUR HANDLER);
+}
 ```
 
 ## Command API
