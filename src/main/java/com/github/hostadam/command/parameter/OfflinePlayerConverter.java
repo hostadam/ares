@@ -9,7 +9,7 @@ public class OfflinePlayerConverter implements ParameterConverter<OfflinePlayer>
     @Override
     public OfflinePlayer convert(String arg) {
         OfflinePlayer player = Bukkit.getOfflinePlayer(arg);
-        if(!player.hasPlayedBefore()) {
+        if(!player.hasPlayedBefore() && !player.isOnline()) {
             return null;
         }
 
