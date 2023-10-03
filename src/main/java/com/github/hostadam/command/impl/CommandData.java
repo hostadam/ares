@@ -65,7 +65,6 @@ public class CommandData {
             if(parameter.getType() == String[].class) {
                 if(i + 1 > args.length) {
                     objects[i + 1] = new String[] {};
-                    argCount++;
                     break;
                 }
 
