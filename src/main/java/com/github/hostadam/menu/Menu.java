@@ -50,6 +50,7 @@ public abstract class Menu {
     }
 
     public void open(int page) {
+        this.init();
         this.page = page;
         this.inventory = Bukkit.createInventory(null, this.size, this.title);
 
