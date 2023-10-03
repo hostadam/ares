@@ -3,6 +3,7 @@ package com.github.hostadam.command.impl;
 import com.github.hostadam.command.handler.CommandHandler;
 import com.google.common.collect.Lists;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
@@ -42,6 +43,7 @@ public class CommandImpl extends Command {
 
     public CommandData getSubCommand(String name) {
         for(CommandData command : this.subcommands) {
+            Bukkit.broadcastMessage("main = " + this.getName() + ", sub = " + Arrays.toString(command.getCommand().labels()));
             for(String label : command.getCommand().labels()) {
                 if(label.equalsIgnoreCase(name)) {
                     return command;
