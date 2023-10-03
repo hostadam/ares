@@ -43,11 +43,8 @@ public class CommandImpl extends Command {
 
     public CommandData getSubCommand(String name) {
         for(CommandData command : this.subcommands) {
-            Bukkit.broadcastMessage("main = " + this.getName() + ", sub = " + Arrays.toString(command.getCommand().labels()));
-            for(String label : command.getCommand().labels()) {
-                if(label.equalsIgnoreCase(name)) {
-                    return command;
-                }
+            if(command.match(name)) {
+                return command;
             }
         }
 

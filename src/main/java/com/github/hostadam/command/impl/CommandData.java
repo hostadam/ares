@@ -29,6 +29,17 @@ public class CommandData {
         this.playerOnly = method.getParameters()[0].getType() == Player.class;
     }
 
+    public boolean match(String name) {
+        for(String string : this.command.labels()) {
+            if(!string.contains(" ")) continue;
+            if(string.split(" ")[1].equalsIgnoreCase(name)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void execute(CommandHandler handler, CommandSender sender, String[] args) {
         int parameters = this.method.getParameterCount();
         Object[] objects = new Object[parameters];
