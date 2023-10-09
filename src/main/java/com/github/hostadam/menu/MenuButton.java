@@ -10,27 +10,22 @@ import org.bukkit.inventory.ItemStack;
 import java.util.function.Consumer;
 
 @Getter
-public class MenuButton {
+public class MenuButton extends ItemBuilder {
 
-    private ItemBuilder builder;
     @Setter
     private int slot;
     private Consumer<InventoryClickEvent> clickEvent;
 
     public MenuButton(Material material) {
-        this.builder = new ItemBuilder(material);
+        super(material);
     }
 
     public MenuButton(ItemStack itemStack) {
-        this.builder = new ItemBuilder(itemStack);
+        super(itemStack);
     }
 
     public MenuButton onClick(Consumer<InventoryClickEvent> clickEvent) {
         this.clickEvent = clickEvent;
         return this;
-    }
-
-    public ItemStack constructItem() {
-        return this.builder.build();
     }
 }

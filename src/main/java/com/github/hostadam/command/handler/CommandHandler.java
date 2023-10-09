@@ -49,7 +49,7 @@ public class CommandHandler {
         for(Method method : object.getClass().getMethods()) {
             if(!method.isAnnotationPresent(AresCommand.class)
                     || method.getParameterCount() < 1
-                    || method.getParameters()[0].getType() != CommandSender.class) {
+                    || !method.getParameters()[0].getType().isAssignableFrom(CommandSender.class)) {
                 continue;
             }
 

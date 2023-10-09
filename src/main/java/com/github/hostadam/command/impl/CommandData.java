@@ -41,15 +41,15 @@ public class CommandData {
     }
 
     public void execute(CommandHandler handler, CommandSender sender, String[] args) {
-        int parameters = this.method.getParameterCount();
-        Object[] objects = new Object[parameters];
+        int parameters = this.method.getParameterCount(); //2
+        Object[] objects = new Object[parameters]; //2
 
         if(this.playerOnly && !(sender instanceof Player)) {
             sender.sendMessage("§cOnly players can run this command");
             return;
         }
 
-        if((parameters - 2) > args.length) {
+        if((parameters - 1) > args.length) { //1 > 0
             sender.sendMessage("§cUsage: /" + this.command.usage());
             return;
         }
@@ -59,19 +59,21 @@ public class CommandData {
         int argCount = 0;
 
         for(int i = 0; i < parameters; i++) {
-            if(i + 1 > parameters - 1) break;
             Parameter parameter = this.method.getParameters()[i + 1];
 
             if(parameter.getType() == String[].class) {
                 if(i + 1 > args.length) {
                     objects[i + 1] = new String[] {};
-                    break;
+                } else {
+                    String[] arrayCopy = Arrays.copyOfRange(args, i + 1, args.length);
+                    objects[i] = arrayCopy;
+                    argCount += arrayCopy.length;
                 }
-
-                String[] arrayCopy = Arrays.copyOfRange(args, i + 1, args.length);
-                objects[i] = arrayCopy;
-                argCount += arrayCopy.length;
-                break;
+            } else {
+                if(i >= args.length) {
+                    sender.sendMessage("§cUsage: /" + this.command.usage());
+                    return;
+                }
             }
 
             argCount++;
