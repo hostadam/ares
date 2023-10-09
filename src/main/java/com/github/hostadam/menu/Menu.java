@@ -63,7 +63,7 @@ public abstract class Menu {
                 continue;
             }
 
-            this.inventory.setItem(button.getSlot(), button.constructItem());
+            this.inventory.setItem(button.getSlot(), button.build());
         }
 
         this.player.openInventory(this.inventory);
