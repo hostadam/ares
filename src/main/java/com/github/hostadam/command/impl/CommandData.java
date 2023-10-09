@@ -58,19 +58,19 @@ public class CommandData {
 
         int argCount = 0;
 
-        for(int i = 0; i < parameters; i++) {
-            Parameter parameter = this.method.getParameters()[i + 1];
+        for(int i = 1; i < parameters; i++) {
+            Parameter parameter = this.method.getParameters()[i];
 
             if(parameter.getType() == String[].class) {
-                if(i + 1 > args.length) {
-                    objects[i + 1] = new String[] {};
+                if(i > args.length) {
+                    objects[i] = new String[] {};
                 } else {
-                    String[] arrayCopy = Arrays.copyOfRange(args, i + 1, args.length);
+                    String[] arrayCopy = Arrays.copyOfRange(args, i, args.length);
                     objects[i] = arrayCopy;
                     argCount += arrayCopy.length;
                 }
             } else {
-                if(i >= args.length) {
+                if(i - 1 >= args.length) {
                     sender.sendMessage("§cUsage: /" + this.command.usage());
                     return;
                 }
@@ -81,15 +81,15 @@ public class CommandData {
             if(converter == null) continue;
 
             try {
-                Object object = converter.convert(args[i].trim());
+                Object object = converter.convert(args[i - 1].trim());
                 if(object == null) {
-                    converter.error(sender, args[i]);
+                    converter.error(sender, args[i - 1]);
                     return;
                 }
 
-                objects[i + 1] = object;
+                objects[i] = object;
             } catch(Exception exception) {
-                converter.error(sender, args[i]);
+                converter.error(sender, args[i - 1]);
                 return;
             }
         }
