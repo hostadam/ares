@@ -29,7 +29,7 @@ public class CommandImpl extends Command {
     public boolean execute(CommandSender sender, String label, String[] args) {
         CommandData subcommand;
         if(args.length > 0 && (subcommand = this.getSubCommand(args[0])) != null) {
-            subcommand.execute(this.commandHandler, sender, Arrays.copyOfRange(args, 1, args.length));
+            subcommand.execute(this.commandHandler, sender, Arrays.copyOfRange(args, 0, args.length));
         } else {
             this.data.execute(this.commandHandler, sender, args);
         }
