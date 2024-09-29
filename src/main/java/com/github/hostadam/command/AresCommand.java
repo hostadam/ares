@@ -14,5 +14,4 @@ public @interface AresCommand {
     String usage() default "";
     String permission() default "";
     int requiredArgs() default 0;
-    CommandTarget target() default CommandTarget.ALL;
 }

@@ -22,6 +22,7 @@ import java.util.*;
 public class CommandHandler {
 
     private CommandMap map;
+
     private final Map<Class<?>, ParameterConverter<?>> parameters;
     private final Map<String, CommandImpl> commands;
 
@@ -62,11 +63,6 @@ public class CommandHandler {
                 CommandImpl parentCommand = this.getCommandByLabel(split[0]);
                 if(parentCommand != null) parentCommand.addSubCommand(data);
             } else {
-                List<String> aliases = new ArrayList<>();
-                if(command.labels().length > 1) {
-                    aliases.addAll(List.of(Arrays.copyOfRange(command.labels(), 1, command.labels().length)));
-                }
-
                 CommandImpl impl = new CommandImpl(this, data);
                 this.map.register(name, impl);
                 this.commands.put(name, impl);

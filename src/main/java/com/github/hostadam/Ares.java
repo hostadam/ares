@@ -6,8 +6,6 @@ import com.github.hostadam.board.BoardHandler;
 import com.github.hostadam.command.ParameterConverter;
 import com.github.hostadam.command.handler.CommandHandler;
 import com.github.hostadam.command.impl.CommandImpl;
-import com.github.hostadam.menu.Menu;
-import com.github.hostadam.menu.MenuHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -19,12 +17,10 @@ public class Ares {
 
     private BoardHandler boardHandler;
     private CommandHandler commandHandler;
-    private MenuHandler menuHandler;
 
     public Ares(JavaPlugin parent) {
         this.boardHandler = new BoardHandler(parent);
         this.commandHandler = new CommandHandler();
-        this.menuHandler = new MenuHandler(parent);
     }
 
     public void setScoreboardAdapter(BoardAdapter adapter) {
@@ -39,11 +35,6 @@ public class Ares {
 
     public Board getScoreboard(UUID uniqueId) {
         return this.boardHandler.getScoreboard(uniqueId);
-    }
-
-    /** Menus **/
-    public void openMenu(Player player, Menu menu) {
-        this.menuHandler.openMenu(player, menu);
     }
 
     /** Commands **/

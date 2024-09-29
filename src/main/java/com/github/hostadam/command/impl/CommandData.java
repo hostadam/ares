@@ -29,20 +29,17 @@ public class CommandData {
         this.playerOnly = method.getParameters()[0].getType() == Player.class;
     }
 
-    public boolean match(String name) {
-        for(String string : this.command.labels()) {
-            if(!string.contains(" ")) continue;
-            if(string.split(" ")[1].equalsIgnoreCase(name)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     public void execute(CommandHandler handler, CommandSender sender, String[] args) {
         int parameters = this.method.getParameterCount(); //2
         Object[] objects = new Object[parameters]; //2
+
+        /**
+         * feed command (args 0 = heal self, args 1 = target)
+         * onCommand(CommandSender sender, String[] args)
+         *
+         * faction create (args 0 = usage, args 1 = name)
+         * onSubCommand(CommandSender sender, String name)
+         */
 
         if(this.playerOnly && !(sender instanceof Player)) {
             sender.sendMessage("§cOnly players can run this command");
@@ -54,43 +51,47 @@ public class CommandData {
             return;
         }
 
-        objects[0] = sender;
+        objects[0] = (this.playerOnly ? (Player) sender : sender);
 
         int argCount = 0;
 
-        for(int i = 1; i < parameters; i++) {
-            Parameter parameter = this.method.getParameters()[i];
+        if(parameters > 1) {
+            for(int i = 1; i < parameters; i++) {
+                Parameter parameter = this.method.getParameters()[i];
 
-            if(parameter.getType() == String[].class) {
-                if(i > args.length) {
-                    objects[i] = new String[] {};
+                if(parameter.getType() == String[].class) {
+                    if(i > args.length) {
+                        argCount++;
+                        objects[i] = new String[] {};
+                    } else {
+                        String[] arrayCopy = Arrays.copyOfRange(args, i, args.length);
+                        objects[i] = arrayCopy;
+                        argCount += arrayCopy.length;
+                    }
                 } else {
-                    String[] arrayCopy = Arrays.copyOfRange(args, i, args.length);
-                    objects[i] = arrayCopy;
-                    argCount += arrayCopy.length;
-                }
-            } else {
-                if(i - 1 >= args.length) {
-                    sender.sendMessage("§cUsage: /" + this.command.usage());
-                    return;
-                }
-            }
+                    if(i - 1 >= args.length) {
+                        sender.sendMessage("§cUsage: /" + this.command.usage());
+                        return;
+                    }
 
-            argCount++;
-            ParameterConverter<?> converter = handler.getConverter(parameter.getType());
-            if(converter == null) continue;
+                    argCount++;
+                }
 
-            try {
-                Object object = converter.convert(args[i - 1].trim());
-                if(object == null) {
+                ParameterConverter<?> converter = handler.getConverter(parameter.getType());
+                if(converter == null) continue;
+
+                try {
+                    Object object = converter.convert(args[i - 1].trim());
+                    if(object == null) {
+                        converter.error(sender, args[i - 1]);
+                        return;
+                    }
+
+                    objects[i] = object;
+                } catch(Exception exception) {
                     converter.error(sender, args[i - 1]);
                     return;
                 }
-
-                objects[i] = object;
-            } catch(Exception exception) {
-                converter.error(sender, args[i - 1]);
-                return;
             }
         }
 

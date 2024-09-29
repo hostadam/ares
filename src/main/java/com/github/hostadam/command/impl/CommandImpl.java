@@ -43,8 +43,11 @@ public class CommandImpl extends Command {
 
     public CommandData getSubCommand(String name) {
         for(CommandData command : this.subcommands) {
-            if(command.match(name)) {
-                return command;
+            for(String string : command.getCommand().labels()) {
+                if(!string.contains(" ")) continue;
+                if(string.split(" ")[1].equalsIgnoreCase(name)) {
+                    return command;
+                }
             }
         }
 
