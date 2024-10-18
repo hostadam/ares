@@ -31,6 +31,13 @@ public class BoardHandler implements Listener {
         return this.boards.get(uniqueId);
     }
 
+    public void refresh() {
+        this.boards.values().forEach(board -> {
+            board.setAdapter(this.adapter);
+            board.update();
+        });
+    }
+
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         if(this.adapter == null) return;

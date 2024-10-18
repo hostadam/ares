@@ -19,6 +19,7 @@ public class Board {
 
     private Player player;
     private BoardObjective objective;
+    @Setter
     private BoardAdapter adapter;
 
     private Scoreboard scoreboard;

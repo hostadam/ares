@@ -15,7 +15,7 @@ public class TimeUtils {
     );
 
     public static long parseTime(String string) {
-        if(string.contains("perm")) {
+        if(string.contains("perm") || string.equalsIgnoreCase("lifetime")) {
             return Long.MAX_VALUE;
         }
 

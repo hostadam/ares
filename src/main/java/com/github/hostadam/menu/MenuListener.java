@@ -24,8 +24,8 @@ public class MenuListener implements Listener {
     @EventHandler
     public void onClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
-        Menu.getPlayerMenu(player).ifPresent(newMenu -> {
-            boolean cancel = newMenu.click(event);
+        Menu.getPlayerMenu(player).ifPresent(menu -> {
+            boolean cancel = menu.click(event);
             event.setCancelled(cancel);
         });
     }

@@ -47,5 +47,4 @@ public class NametagHandler {
         String teamNameIdentifier = String.valueOf(CHARACTERS.charAt(remainder)).repeat(iteration) + "-" + teamName;
         return this.board.registerNewTeam(teamNameIdentifier);
     }
-
 }

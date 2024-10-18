@@ -25,7 +25,7 @@ public class Ares {
 
     public void setScoreboardAdapter(BoardAdapter adapter) {
         this.boardHandler.setAdapter(adapter);
-        //TODO: Refresh for all online players.
+        this.boardHandler.refresh();
     }
 
     /** Board **/

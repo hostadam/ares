@@ -56,7 +56,7 @@ public class ItemBuilder {
 
     public ItemBuilder glow(boolean shouldApply) {
         if(shouldApply) {
-            this.enchant(Enchantment.ARROW_INFINITE, 0);
+            this.enchant(Enchantment.INFINITY, 0);
             this.itemFlag(ItemFlag.HIDE_ENCHANTS);
         }
 
