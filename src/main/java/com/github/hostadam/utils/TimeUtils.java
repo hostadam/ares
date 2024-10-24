@@ -35,4 +35,21 @@ public class TimeUtils {
 
         return result > 0 ? result + 1L : result == 0 ? result : -1;
     }
+
+    public static String format(int time) {
+        int sec = time % 60;
+        int min = time / 60 % 60;
+        int h = time / 3600 % 24;
+
+        return (h > 0 ? h + ":" : "") + (min < 10 ? "0" + min : min) + ":" + (sec < 10 ? "0" + sec : sec);
+    }
+
+    public static String format(long timeInMillis) {
+        final int time = (int) (timeInMillis / 1000L);
+        int sec = time % 60;
+        int min = time / 60 % 60;
+        int h = time / 3600 % 24;
+
+        return (h > 0 ? h + ":" : "") + (min < 10 ? "0" + min : min) + ":" + (sec < 10 ? "0" + sec : sec);
+    }
 }
