@@ -9,6 +9,12 @@ public class ColorUtils {
 
     private static final Pattern HEX_PATTERN = Pattern.compile("&#[a-fA-F0-9]{6}");
 
+    /**
+     * Format a message with hex colors
+     *
+     * @param message the message to format
+     * @return the message formatted with hex colors
+     */
     public static String formatHex(String message) {
         Matcher match = HEX_PATTERN.matcher(message);
         while(match.find()) {

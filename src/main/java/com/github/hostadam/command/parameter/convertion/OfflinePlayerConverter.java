@@ -1,6 +1,6 @@
-package com.github.hostadam.command.parameter;
+package com.github.hostadam.command.parameter.convertion;
 
-import com.github.hostadam.command.ParameterConverter;
+import com.github.hostadam.command.parameter.ParameterConverter;
 import com.github.hostadam.utils.PlayerUtils;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;

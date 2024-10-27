@@ -18,6 +18,13 @@ import java.util.function.Predicate;
 
 public class PlayerUtils {
 
+    /**
+     * Get the damager in e.g. a PlayerDeathEvent, based on the entity.
+     * If the damager is a Projectile, we assure the Player returned is the projectile shooter.
+     *
+     * @param entity the entity to return as a Player
+     * @return the entity returned as a Player
+     */
     public static Player getDamager(Entity entity) {
         if(entity.getType() == EntityType.PLAYER) {
             return (Player) entity;
@@ -30,6 +37,13 @@ public class PlayerUtils {
         return null;
     }
 
+    /**
+     * Get the offline player from a name. A new offline player instance is created when using the Bukkit method.
+     * Therefore, we return the offline player as null if they have never been on the server before.
+     *
+     * @param name the name of the player
+     * @return the offline player
+     */
     public static OfflinePlayer getOfflinePlayer(String name) {
         OfflinePlayer player = Bukkit.getOfflinePlayer(name);
         if(!player.hasPlayedBefore() && !player.isOnline()) {
@@ -39,6 +53,13 @@ public class PlayerUtils {
         return player;
     }
 
+    /**
+     * Get the offline player from a uuid. A new offline player instance is created when using the Bukkit method.
+     * Therefore, we return the offline player as null if they have never been on the server before.
+     *
+     * @param uniqueId the uuid of the player
+     * @return the offline player
+     */
     public static OfflinePlayer getOfflinePlayer(UUID uniqueId) {
         OfflinePlayer player = Bukkit.getOfflinePlayer(uniqueId);
         if(!player.hasPlayedBefore() && !player.isOnline()) {
@@ -48,6 +69,14 @@ public class PlayerUtils {
         return player;
     }
 
+    /**
+     * Count the amount of a specific item in a player's inventory
+     * Includes stacks of items to ensure proper counting.
+     *
+     * @param player the player to check
+     * @param itemStack the itemstack to look for
+     * @return the amount of items
+     */
     public static int countItems(Player player, ItemStack itemStack) {
         final Inventory inventory = player.getInventory();
         int count = 0;
@@ -64,6 +93,14 @@ public class PlayerUtils {
         return count;
     }
 
+    /**
+     * Check if a player's inventory is full, even for a certain item.
+     * This makes sure that items of that type, who have not been fully stacked, don't count as full.
+     *
+     * @param inventory the inventory to check
+     * @param itemStack the itemstack to look for
+     * @return if the itemstack fits in the inventory or not.
+     */
     public static boolean isFull(Inventory inventory, ItemStack itemStack) {
         int firstEmpty = inventory.firstEmpty();
         if(firstEmpty != -1) return false;
@@ -77,6 +114,13 @@ public class PlayerUtils {
         return false;
     }
 
+    /**
+     * Removes an item from a player's inventory.
+     *
+     * @param player the player to remove from
+     * @param item the itemstack to remove
+     * @param amountToRemove the amount of the item to remove
+     */
     public static void removeItem(Player player, ItemStack item, int amountToRemove) {
         if(amountToRemove <= 0) {
             return;
@@ -104,10 +148,26 @@ public class PlayerUtils {
         }
     }
 
+
+    /**
+     * Gives a player an item. If the item does not fit in the inventory,
+     * the item is instead dropped on the ground at the player's location.
+     *
+     * @param player the player to give the item to
+     * @param item the itemstack to give
+     */
     public static void giveItem(Player player, ItemStack item) {
         giveItem(player, item, player.getLocation());
     }
 
+    /**
+     * Gives a player an item. If the item does not fit in the inventory,
+     * the item is instead dropped on the ground at a specific location.
+     *
+     * @param player the player to give the item to
+     * @param item the itemstack to give
+     * @param location the location to drop the item at if the inventory is full
+     */
     public static void giveItem(Player player, ItemStack item, Location location) {
         PlayerInventory inventory = player.getInventory();
         if(item == null || item.getType() == Material.AIR || item.getAmount() <= 0) {
@@ -123,6 +183,13 @@ public class PlayerUtils {
         }
     }
 
+    /**
+     * Gives a player a list of items. If the item does not fit in the inventory,
+     * the item is instead dropped on the ground at the player's location.
+     *
+     * @param player the player to give the item to
+     * @param items the itemstacks to give
+     */
     public static void giveItems(Player player, ItemStack[] items) {
         Arrays.stream(items).forEach(itemStack -> giveItem(player, itemStack));
     }

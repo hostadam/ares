@@ -1,14 +1,12 @@
 package com.github.hostadam.command.handler;
 
 import com.github.hostadam.command.AresCommand;
-import com.github.hostadam.command.ParameterConverter;
-import com.github.hostadam.command.impl.CommandData;
-import com.github.hostadam.command.impl.CommandImpl;
-import com.github.hostadam.command.parameter.BooleanConverter;
-import com.github.hostadam.command.parameter.IntConverter;
-import com.github.hostadam.command.parameter.OfflinePlayerConverter;
-import com.github.hostadam.command.parameter.OnlinePlayerConverter;
+import com.github.hostadam.command.parameter.ParameterConverter;
+import com.github.hostadam.command.impl.AresCommandData;
+import com.github.hostadam.command.impl.AresCommandImpl;
+import com.github.hostadam.command.parameter.convertion.*;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.command.CommandMap;
@@ -18,17 +16,20 @@ import org.bukkit.entity.Player;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.function.Function;
 
 public class CommandHandler {
 
     private CommandMap map;
 
     private final Map<Class<?>, ParameterConverter<?>> parameters;
-    private final Map<String, CommandImpl> commands;
+    private final Map<String, AresCommandImpl> commands;
+    private final Map<String, List<AresCommandData>> subCommandQueue;
 
     public CommandHandler() {
         this.parameters = new HashMap<>();
         this.commands = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        this.subCommandQueue = new HashMap<>();
 
         try {
             final Server server = Bukkit.getServer();
@@ -39,8 +40,9 @@ public class CommandHandler {
             e.printStackTrace();
         }
 
-        this.addConverter(Boolean.class, new BooleanConverter());
-        this.addConverter(Integer.class, new IntConverter());
+        this.addConverter(boolean.class, new BooleanConverter());
+        this.addConverter(int.class, new IntConverter());
+        this.addConverter(Material.class, new MaterialConverter());
         this.addConverter(OfflinePlayer.class, new OfflinePlayerConverter());
         this.addConverter(Player.class, new OnlinePlayerConverter());
     }
@@ -55,22 +57,29 @@ public class CommandHandler {
             }
 
             AresCommand command = method.getAnnotation(AresCommand.class);
-            CommandData data = new CommandData(command, method, object);
-            String name = command.labels()[0];
+            AresCommandData data = new AresCommandData(command, method, object);
+            String name = command.labels()[0], parent = command.parent();
 
-            if(name.contains(" ")) {
-                String[] split = name.split(" ");
-                CommandImpl parentCommand = this.getCommandByLabel(split[0]);
-                if(parentCommand != null) parentCommand.addSubCommand(data);
-            } else {
-                CommandImpl impl = new CommandImpl(this, data);
-                this.map.register(name, impl);
+            if(parent.isEmpty()) {
+                AresCommandImpl impl = new AresCommandImpl(this, data);
                 this.commands.put(name, impl);
+
+                if(this.subCommandQueue.containsKey(name)) {
+                    this.subCommandQueue.get(name).forEach(impl::addSubCommand);
+                }
+
+                this.map.register(name, impl);
+            } else if(!this.commands.containsKey(parent)) {
+                List<AresCommandData> subCommands = this.subCommandQueue.getOrDefault(parent, new ArrayList<>());
+                subCommands.add(data);
+            } else {
+                AresCommandImpl parentCommand = this.getCommandByLabel(parent);
+                if(parentCommand != null) parentCommand.addSubCommand(data);
             }
         }
     }
 
-    public CommandImpl getCommandByLabel(String name) {
+    public AresCommandImpl getCommandByLabel(String name) {
         return this.commands.get(name);
     }
 

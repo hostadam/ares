@@ -1,4 +1,4 @@
-package com.github.hostadam.command;
+package com.github.hostadam.command.parameter;
 
 import org.bukkit.command.CommandSender;
 

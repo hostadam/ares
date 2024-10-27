@@ -10,6 +10,7 @@ import java.lang.annotation.Target;
 public @interface AresCommand {
 
     String[] labels();
+    String parent() default "";
     String description();
     String usage() default "";
     String permission() default "";

@@ -3,7 +3,6 @@ package com.github.hostadam.command.impl;
 import com.github.hostadam.command.handler.CommandHandler;
 import com.google.common.collect.Lists;
 import lombok.Getter;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
@@ -12,13 +11,14 @@ import java.util.Arrays;
 import java.util.List;
 
 @Getter
-public class CommandImpl extends Command {
+public class AresCommandImpl extends Command {
 
     private final CommandHandler commandHandler;
-    private CommandData data;
-    private List<CommandData> subcommands = new ArrayList<>();
 
-    public CommandImpl(CommandHandler handler, CommandData data) {
+    private AresCommandData data;
+    private List<AresCommandData> subcommands = new ArrayList<>();
+
+    public AresCommandImpl(CommandHandler handler, AresCommandData data) {
         super(data.getCommand().labels()[0], data.getCommand().description(), data.getCommand().usage(), data.getCommand().labels().length > 1 ? List.of(Arrays.copyOfRange(data.getCommand().labels(), 1, data.getCommand().labels().length)) : Lists.newArrayList());
         this.setPermission(data.getCommand().permission());
         this.data = data;
@@ -27,25 +27,26 @@ public class CommandImpl extends Command {
 
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
-        CommandData subcommand;
-        if(args.length > 0 && (subcommand = this.getSubCommand(args[0])) != null) {
+        if(this.subcommands.isEmpty()) {
+            this.data.execute(this.commandHandler, sender, args);
+        } else if(args.length > 0) {
+            AresCommandData subcommand = this.getSubCommand(args[0]);
             subcommand.execute(this.commandHandler, sender, Arrays.copyOfRange(args, 0, args.length));
         } else {
-            this.data.execute(this.commandHandler, sender, args);
+            //TODO: Send fancy usage.
         }
 
         return true;
     }
 
-    public void addSubCommand(CommandData data) {
+    public void addSubCommand(AresCommandData data) {
         this.subcommands.add(data);
     }
 
-    public CommandData getSubCommand(String name) {
-        for(CommandData command : this.subcommands) {
+    public AresCommandData getSubCommand(String name) {
+        for(AresCommandData command : this.subcommands) {
             for(String string : command.getCommand().labels()) {
-                if(!string.contains(" ")) continue;
-                if(string.split(" ")[1].equalsIgnoreCase(name)) {
+                if(string.equalsIgnoreCase(name)) {
                     return command;
                 }
             }
