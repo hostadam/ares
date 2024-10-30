@@ -61,6 +61,13 @@ public abstract class Menu {
         this.template = template;
     }
 
+    public void setTemplate(List<String> template) {
+        this.template = new String[template.size()];
+        for(int index = 0; index < template.size(); index++) {
+            this.template[index] = template.get(index);
+        }
+    }
+
     public void open() {
         if(this.template == null) {
             throw new UnsupportedOperationException("No template was found.");

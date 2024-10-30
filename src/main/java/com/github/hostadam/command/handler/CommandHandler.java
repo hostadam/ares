@@ -11,6 +11,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Field;
@@ -41,6 +42,7 @@ public class CommandHandler {
         }
 
         this.addConverter(boolean.class, new BooleanConverter());
+        this.addConverter(EntityType.class, new EntityTypeConverter());
         this.addConverter(int.class, new IntConverter());
         this.addConverter(Material.class, new MaterialConverter());
         this.addConverter(OfflinePlayer.class, new OfflinePlayerConverter());

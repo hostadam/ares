@@ -3,9 +3,12 @@ package com.github.hostadam;
 import com.github.hostadam.board.Board;
 import com.github.hostadam.board.BoardAdapter;
 import com.github.hostadam.board.BoardHandler;
+import com.github.hostadam.chat.ChatListener;
 import com.github.hostadam.command.parameter.ParameterConverter;
 import com.github.hostadam.command.handler.CommandHandler;
 import com.github.hostadam.command.impl.AresCommandImpl;
+import com.github.hostadam.menu.MenuListener;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -21,6 +24,9 @@ public class Ares implements AresInterface {
     public Ares(JavaPlugin parent) {
         this.boardHandler = new BoardHandler(parent);
         this.commandHandler = new CommandHandler();
+
+        Bukkit.getPluginManager().registerEvents(new ChatListener(), parent);
+        Bukkit.getPluginManager().registerEvents(new MenuListener(), parent);
     }
 
     @Override
