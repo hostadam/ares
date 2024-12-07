@@ -66,7 +66,7 @@ It's recommended to experiment by yourself to get an understanding of how the di
 
 ## Initializing Ares
 Ares needs a plugin to rely on, so you need to make sure Ares is initialized properly.
-``` Java
+```java
 public class YourPlugin extends JavaPlugin {
 
     @Override
