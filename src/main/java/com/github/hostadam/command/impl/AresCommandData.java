@@ -85,7 +85,7 @@ public class AresCommandData {
         }
 
         if(args.length < Math.max(this.command.requiredArgs(), requiredArgCount)) {
-            sender.sendMessage("§cUsage: /" + this.command.usage());
+            sender.sendMessage("§cUsage: /" + (this.command.parent().isEmpty() ? "" : this.command.parent() + " ") + this.command.labels()[0] + " " + this.command.usage());
             return;
         }
 

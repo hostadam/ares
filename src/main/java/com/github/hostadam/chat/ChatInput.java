@@ -1,9 +1,7 @@
 package com.github.hostadam.chat;
 
-import com.github.hostadam.menu.Menu;
 import lombok.Getter;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 import java.util.HashMap;
 import java.util.Map;

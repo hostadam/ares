@@ -1,7 +1,9 @@
 package com.github.hostadam.command.impl;
 
+import com.github.hostadam.command.AresCommand;
 import com.github.hostadam.command.handler.CommandHandler;
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Ints;
 import lombok.Getter;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -29,14 +31,59 @@ public class AresCommandImpl extends Command {
     public boolean execute(CommandSender sender, String label, String[] args) {
         if(this.subcommands.isEmpty()) {
             this.data.execute(this.commandHandler, sender, args);
-        } else if(args.length > 0) {
-            AresCommandData subcommand = this.getSubCommand(args[0]);
-            subcommand.execute(this.commandHandler, sender, Arrays.copyOfRange(args, 0, args.length));
         } else {
-            //TODO: Send fancy usage.
+            if(args.length > 0) {
+                String subcommandString = args[0];
+                if(subcommandString.equalsIgnoreCase("help")) {
+                    int page = 0;
+                    if(args.length > 1 && Ints.tryParse(args[1]) != null) {
+                        page = Integer.parseInt(args[1]);
+                    }
+
+                    this.sendUsage(sender, args, page);
+                    return true;
+                }
+
+                AresCommandData subcommand = this.getSubCommand(subcommandString);
+                if(subcommand == null) {
+                    this.sendUsage(sender, args, 0);
+                    return true;
+                }
+
+                subcommand.execute(this.commandHandler, sender, Arrays.copyOfRange(args, 0, args.length));
+            } else {
+                this.sendUsage(sender, args, 0);
+            }
         }
 
         return true;
+    }
+
+    private void sendUsage(CommandSender sender, String[] args, int page) {
+        List<AresCommandData> subCommands;
+        final int commandsPerPage = 10;
+        final int maxPages = (int) Math.floor((double) this.subcommands.size() / commandsPerPage);
+        if(maxPages == 0) {
+            subCommands = this.subcommands;
+        } else if(page > maxPages) {
+            subCommands = this.subcommands.subList(0, Math.min(commandsPerPage, this.subcommands.size()));
+        } else {
+            final int startOfRange = page * commandsPerPage;
+            final int endOfRange = (page + 1) * commandsPerPage - 1;
+            subCommands = this.subcommands.subList(startOfRange, Math.min(endOfRange, this.subcommands.size()));
+        }
+
+        String mainLabel = data.getCommand().labels()[0];
+        sender.sendMessage(" ");
+        sender.sendMessage("§e§l" + mainLabel + " §7(Command Help)");
+        sender.sendMessage("§7§o<> = required, [] = optional");
+        sender.sendMessage(" ");
+        for(AresCommandData subCommand : subCommands) {
+            AresCommand command = subCommand.getCommand();
+            sender.sendMessage("§e/" + mainLabel + " " + command.labels()[0] + " " + subCommand.getCommand().usage());
+        }
+
+        sender.sendMessage(" ");
     }
 
     public void addSubCommand(AresCommandData data) {

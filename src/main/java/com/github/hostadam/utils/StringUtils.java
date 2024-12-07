@@ -5,9 +5,10 @@ import net.md_5.bungee.api.ChatColor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ColorUtils {
+public class StringUtils {
 
     private static final Pattern HEX_PATTERN = Pattern.compile("&#[a-fA-F0-9]{6}");
+    private static final Pattern ALPHANUMERIC_PATTERN = Pattern.compile("\\p{Alnum}+");
 
     /**
      * Format a message with hex colors
@@ -24,5 +25,10 @@ public class ColorUtils {
         }
 
         return ChatColor.translateAlternateColorCodes('&', message);
+    }
+
+    public static boolean isAlphanumeric(String string) {
+        Matcher matcher = ALPHANUMERIC_PATTERN.matcher(string);
+        return matcher.matches();
     }
 }

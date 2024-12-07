@@ -46,7 +46,7 @@ public class ItemBuilder {
     }
 
     public ItemBuilder name(String displayName) {
-        this.meta.setDisplayName("§r" + ColorUtils.formatHex(displayName));
+        this.meta.setDisplayName("§r" + StringUtils.formatHex(displayName));
         return this;
     }
 
