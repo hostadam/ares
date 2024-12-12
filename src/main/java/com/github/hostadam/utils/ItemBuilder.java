@@ -10,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
@@ -100,6 +101,15 @@ public class ItemBuilder {
 
     public ItemBuilder dyeColor(DyeColor color) {
         ((LeatherArmorMeta) this.meta).setColor(color.getColor());
+        return this;
+    }
+
+    public ItemBuilder skull(String playerName) {
+        if(this.meta instanceof SkullMeta) {
+            SkullMeta skullMeta = (SkullMeta) meta;
+            skullMeta.setOwner(playerName);
+        }
+
         return this;
     }
 

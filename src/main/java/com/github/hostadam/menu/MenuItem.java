@@ -2,7 +2,9 @@ package com.github.hostadam.menu;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Item;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -19,6 +21,7 @@ public class MenuItem {
     private Consumer<InventoryClickEvent> clickEvent;
 
     public MenuItem(ItemStack itemStack) {
+        if(itemStack == null) itemStack = new ItemStack(Material.AIR);
         this.itemStack = itemStack;
     }
 
