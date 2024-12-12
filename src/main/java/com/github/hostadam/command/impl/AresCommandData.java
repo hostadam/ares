@@ -47,7 +47,6 @@ public class AresCommandData {
         if(parameters > 1) {
             for(int i = 1; i < parameters; i++) {
                 Parameter parameter = this.method.getParameters()[i];
-                Param param = parameter.getAnnotation(Param.class);
 
                 if(parameter.getType() == String[].class) {
                     if(i > args.length) {
@@ -61,30 +60,38 @@ public class AresCommandData {
                     break;
                 }
 
-                if(param == null || !param.optional()) {
-                    requiredArgCount++;
-                }
-
                 ParameterConverter<?> converter = handler.getConverter(parameter.getType());
                 if(converter == null) continue;
+
+                Param param = parameter.getAnnotation(Param.class);
+                boolean required = param == null || !param.optional();
+
+                if(required) {
+                    requiredArgCount++;
+                }
 
                 String arg = args[i - 1].trim();
                 try {
                     Object object = converter.convert(arg);
-                    if(object == null) {
+                    if(object == null && required) {
                         converter.error(sender, arg);
                         return;
                     }
 
                     objects[i] = object;
                 } catch(Exception exception) {
-                    converter.error(sender, args[i - 1]);
-                    return;
+                    if(required) {
+                        converter.error(sender, arg);
+                        return;
+                    } else {
+                        objects[i] = null;
+                    }
                 }
             }
         }
 
-        if(args.length < Math.max(this.command.requiredArgs(), requiredArgCount)) {
+        final int requiredArgs = Math.max(this.command.requiredArgs(), requiredArgCount);
+        if(args.length < requiredArgs) {
             sender.sendMessage("§cUsage: /" + (this.command.parent().isEmpty() ? "" : this.command.parent() + " ") + this.command.labels()[0] + " " + this.command.usage());
             return;
         }

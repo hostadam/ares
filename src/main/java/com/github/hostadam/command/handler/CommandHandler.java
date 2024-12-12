@@ -5,10 +5,7 @@ import com.github.hostadam.command.parameter.ParameterConverter;
 import com.github.hostadam.command.impl.AresCommandData;
 import com.github.hostadam.command.impl.AresCommandImpl;
 import com.github.hostadam.command.parameter.convertion.*;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.Server;
+import org.bukkit.*;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
@@ -45,8 +42,12 @@ public class CommandHandler {
         this.addConverter(EntityType.class, new EntityTypeConverter());
         this.addConverter(int.class, new IntConverter());
         this.addConverter(Material.class, new MaterialConverter());
+        this.addConverter(World.class, new WorldConverter());
+        this.addConverter(GameMode.class, new GameModeConverter());
         this.addConverter(OfflinePlayer.class, new OfflinePlayerConverter());
         this.addConverter(Player.class, new OnlinePlayerConverter());
+        this.addConverter(String.class, new StringConverter());
+        this.addConverter(long.class, new LongConverter());
     }
 
     public void register(Object object) {
