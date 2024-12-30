@@ -48,6 +48,8 @@ public class CommandHandler {
         this.addConverter(Player.class, new OnlinePlayerConverter());
         this.addConverter(String.class, new StringConverter());
         this.addConverter(long.class, new LongConverter());
+        this.addConverter(double.class, new DoubleConverter());
+        this.addConverter(ChatColor.class, new ChatColorConverter());
     }
 
     public void register(Object object) {

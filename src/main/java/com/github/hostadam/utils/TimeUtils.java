@@ -57,14 +57,40 @@ public class TimeUtils {
         return (h > 0 ? h + ":" : "") + (min < 10 ? "0" + min : min) + ":" + (sec < 10 ? "0" + sec : sec);
     }
 
-    /**
-     * Formats the time in a 1:00:00 format.
-     *
-     * @param timeInMillis the time in milliseconds.
-     * @return the formatted string
-     */
-    public static String format(long timeInMillis) {
-        final int time = (int) (timeInMillis / 1000L);
-        return format(time);
+    public static String format(long duration) {
+        if(duration == Long.MAX_VALUE) {
+            return "Permanent";
+        }
+
+        if(duration == -2) {
+            return "Seasonal";
+        }
+
+        int sec = (int) (duration / 1000) % 60 ;
+        int min = (int) ((duration / (1000*60)) % 60);
+        int hour = (int) ((duration / (1000*60*60)) % 24);
+        int days = (int) ((duration / (1000*60*60*24)) % 365);
+
+        StringBuilder builder = new StringBuilder();
+
+        if(days > 0) {
+            builder.append(days + "d");
+        }
+        if(hour > 0) {
+            builder.append(hour + "h");
+        }
+        if(min > 0) {
+            builder.append(min + "m");
+        }
+        if(sec > 0) {
+            builder.append(sec + "s");
+        }
+
+        String string = builder.toString();
+        if(string.isEmpty()) {
+            string = "0s";
+        }
+
+        return string;
     }
 }

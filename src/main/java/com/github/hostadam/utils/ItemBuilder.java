@@ -4,6 +4,7 @@ import org.bukkit.Color;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -15,6 +16,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ItemBuilder {
 
@@ -65,7 +67,12 @@ public class ItemBuilder {
     }
 
     public ItemBuilder unbreakable() {
-        this.meta.setUnbreakable(!this.meta.isUnbreakable());
+        return this.unbreakable(true);
+    }
+
+
+    public ItemBuilder unbreakable(boolean shouldApply) {
+        this.meta.setUnbreakable(shouldApply);
         this.itemFlag(ItemFlag.HIDE_UNBREAKABLE);
         return this;
     }
@@ -95,12 +102,18 @@ public class ItemBuilder {
     }
 
     public ItemBuilder potionColor(Color color) {
-        ((PotionMeta) this.meta).setColor(color);
+        if(this.meta instanceof PotionMeta) {
+            ((PotionMeta) this.meta).setColor(color);
+        }
+
         return this;
     }
 
     public ItemBuilder dyeColor(DyeColor color) {
-        ((LeatherArmorMeta) this.meta).setColor(color.getColor());
+        if(this.meta instanceof LeatherArmorMeta) {
+            ((LeatherArmorMeta) this.meta).setColor(color.getColor());
+        }
+
         return this;
     }
 
@@ -158,5 +171,54 @@ public class ItemBuilder {
     public ItemStack build() {
         item.setItemMeta(meta);
         return item;
+    }
+
+    public static ItemBuilder fromConfig(ConfigurationSection section) {
+        Material material = Material.getMaterial(section.getString("material").toUpperCase());
+        int amount = section.getInt("amount", 1);
+        ItemBuilder builder = new ItemBuilder(material)
+                .amount(amount)
+                .durability(section.getInt("durability", 0))
+                .glow(section.contains("glow") && section.getBoolean("glow"))
+                .unbreakable(section.contains("unbreakable") && section.getBoolean("unbreakable"));
+
+        if(section.contains("customModelData")) {
+            builder.customModelData(section.getInt("customModelData"));
+        }
+
+        if(section.contains("playerSkull")) {
+            builder.skull(section.getString("playerSkull"));
+        }
+
+        if(section.contains("dyeColor")) {
+            builder.dyeColor(DyeColor.valueOf(section.getString("dyeColor").toUpperCase()));
+        }
+
+        if(section.contains("potionColor")) {
+            builder.potionColor(Color.fromRGB(section.getInt("potionColor")));
+        }
+
+        if(section.contains("displayName")) {
+            builder.name(StringUtils.formatHex(section.getString("displayName")));
+        }
+
+        if(section.contains("enchantments")) {
+            for(String key : section.getConfigurationSection("enchantments").getKeys(false)) {
+                Enchantment enchantment = Enchantment.getByName(key.toUpperCase());
+                if(enchantment == null) continue;
+                int level = section.getInt("enchantments." + key, enchantment.getStartLevel());
+                builder.enchant(enchantment, level);
+            }
+        }
+
+        if(section.contains("lore")) {
+            List<String> lore = section.getStringList("lore")
+                    .stream()
+                    .map(StringUtils::formatHex)
+                    .toList();
+            builder.lore(lore);
+        }
+
+        return builder;
     }
 }
