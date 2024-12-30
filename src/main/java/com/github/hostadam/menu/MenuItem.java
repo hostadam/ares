@@ -53,11 +53,6 @@ public class MenuItem {
         return this.fallbackItem != null;
     }
 
-    public MenuItem fromConfigSection(ConfigurationSection section) {
-        //TODO: This
-        return null;
-    }
-
     public enum Type {
         NORMAL,
         BACK_TO_MAIN_PAGE,

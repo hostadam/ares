@@ -21,6 +21,7 @@ public abstract class Menu {
     protected Player player;
     @Getter
     protected Inventory inventory;
+    protected MenuTemplate menuTemplate;
     @Setter
     private Menu parent;
     private int size;
@@ -32,6 +33,13 @@ public abstract class Menu {
     private List<Integer> airSlots = new ArrayList<>();
 
     private int page = 1, maxPages = 1;
+
+    public Menu(JavaPlugin plugin, MenuTemplate template) {
+        this.plugin = plugin;
+        this.menuTemplate = template;
+        this.size = template.getInventoryRows() * 9;
+        this.inventory = Bukkit.createInventory(null, this.size, template.getInventoryTitle());
+    }
 
     public Menu(JavaPlugin plugin, Player player, String title, int size) {
         this.player = player;
