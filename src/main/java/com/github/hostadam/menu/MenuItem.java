@@ -13,6 +13,8 @@ import java.util.function.Consumer;
 @Getter
 public class MenuItem {
 
+    //TODO: load from config.
+
     @Setter
     private ItemStack itemStack;
     private ItemStack fallbackItem;

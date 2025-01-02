@@ -1,5 +1,7 @@
 package com.github.hostadam.utils;
 
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -11,6 +13,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -192,5 +195,13 @@ public class PlayerUtils {
      */
     public static void giveItems(Player player, ItemStack[] items) {
         Arrays.stream(items).forEach(itemStack -> giveItem(player, itemStack));
+    }
+
+    public static void connectPlayer(JavaPlugin plugin, Player player, String server) {
+        ByteArrayDataOutput output = ByteStreams.newDataOutput();
+
+        output.writeUTF("Connect");
+        output.writeUTF(server);
+        player.sendPluginMessage(plugin, "BungeeCord", output.toByteArray());
     }
 }
