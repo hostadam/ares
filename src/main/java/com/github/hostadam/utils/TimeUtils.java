@@ -62,10 +62,6 @@ public class TimeUtils {
             return "Permanent";
         }
 
-        if(duration == -2) {
-            return "Seasonal";
-        }
-
         int sec = (int) (duration / 1000) % 60 ;
         int min = (int) ((duration / (1000*60)) % 60);
         int hour = (int) ((duration / (1000*60*60)) % 24);

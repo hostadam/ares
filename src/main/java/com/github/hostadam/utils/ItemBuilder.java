@@ -174,6 +174,7 @@ public class ItemBuilder {
     }
 
     public static ItemBuilder fromConfig(ConfigurationSection section) {
+        if(section == null) return null;
         Material material = Material.getMaterial(section.getString("material").toUpperCase());
         int amount = section.getInt("amount", 1);
         ItemBuilder builder = new ItemBuilder(material)

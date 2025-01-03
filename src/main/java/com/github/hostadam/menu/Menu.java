@@ -34,8 +34,9 @@ public abstract class Menu {
 
     private int page = 1, maxPages = 1;
 
-    public Menu(JavaPlugin plugin, MenuTemplate template) {
+    public Menu(JavaPlugin plugin, Player player, MenuTemplate template) {
         this.plugin = plugin;
+        this.player = player;
         this.menuTemplate = template;
         this.size = template.getInventoryRows() * 9;
         this.inventory = Bukkit.createInventory(null, this.size, template.getInventoryTitle());
@@ -168,18 +169,21 @@ public abstract class Menu {
         MenuItem button = this.buttons.get(event.getRawSlot());
         if(button != null) {
             event.setCancelled(true);
-            if(button.getClickEvent() != null) button.getClickEvent().accept(event);
-            if(button.isPaginated()) {
-                switch(button.getType()) {
-                    case NEXT_PAGE:
-                        this.nextPage();
-                        break;
-                    case PREVIOUS_PAGE:
-                        this.previousPage();
-                        break;
-                    case BACK_TO_MAIN_PAGE:
-                        this.mainPage();
-                        break;
+
+            if(button.getPermission().isEmpty() || this.player.hasPermission(button.getPermission())) {
+                if(button.getClickEvent() != null) button.getClickEvent().accept(event);
+                if(button.isPaginated()) {
+                    switch(button.getType()) {
+                        case NEXT_PAGE:
+                            this.nextPage();
+                            break;
+                        case PREVIOUS_PAGE:
+                            this.previousPage();
+                            break;
+                        case BACK_TO_MAIN_PAGE:
+                            this.mainPage();
+                            break;
+                    }
                 }
             }
         }
