@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 
 public class StringUtils {
 
+    private static final String GRAY_LINE = "§7§m";
     private static final Pattern HEX_PATTERN = Pattern.compile("&#[a-fA-F0-9]{6}");
     private static final Pattern ALPHANUMERIC_PATTERN = Pattern.compile("\\p{Alnum}+");
 
@@ -25,6 +26,10 @@ public class StringUtils {
         }
 
         return ChatColor.translateAlternateColorCodes('&', message);
+    }
+
+    public static String makeLine(int length) {
+        return GRAY_LINE + " ".repeat(length);
     }
 
     public static boolean isAlphanumeric(String string) {

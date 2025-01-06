@@ -65,9 +65,15 @@ public class AresCommandData {
 
                 Param param = parameter.getAnnotation(Param.class);
                 boolean required = param == null || !param.optional();
+                if(required) requiredArgCount++;
 
-                if(required) {
-                    requiredArgCount++;
+                if(i - 1 >= args.length) {
+                    if(required) {
+                        break;
+                    } else {
+                        objects[i] = null;
+                        continue;
+                    }
                 }
 
                 String arg = args[i - 1].trim();

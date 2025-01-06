@@ -73,9 +73,9 @@ public class AresCommandImpl extends Command {
             subCommands = this.subcommands.subList(startOfRange, Math.min(endOfRange, this.subcommands.size()));
         }
 
-        String mainLabel = data.getCommand().labels()[0].toUpperCase();
+        String mainLabel = data.getCommand().labels()[0];
         sender.sendMessage(" ");
-        sender.sendMessage("§e§l" + mainLabel + " §7(Command Help)");
+        sender.sendMessage("§e§l" + mainLabel.toUpperCase() + " §7(Command Help)");
         sender.sendMessage("§7§o<> = required, [] = optional");
         sender.sendMessage(" ");
         for(AresCommandData subCommand : subCommands) {
