@@ -54,10 +54,11 @@ public class CommandHandler {
 
     public void register(Object object) {
         if(this.map == null) return;
-        for(Method method : object.getClass().getMethods()) {
+        for(Method method : object.getClass().getDeclaredMethods()) {
             if(!method.isAnnotationPresent(AresCommand.class)
                     || method.getParameterCount() < 1
                     || !CommandSender.class.isAssignableFrom(method.getParameters()[0].getType())) {
+                System.out.println("Failed to register sub command from " + object.getClass().getSimpleName() + ", method: " + method.getName() + " (" + method.getParameterCount() + ")");
                 continue;
             }
 
