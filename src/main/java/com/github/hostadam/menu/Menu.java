@@ -38,6 +38,7 @@ public abstract class Menu {
         this.plugin = plugin;
         this.player = player;
         this.menuTemplate = template;
+        this.template = template.getTemplate();
         this.size = template.getInventoryRows() * 9;
         this.inventory = Bukkit.createInventory(null, this.size, template.getInventoryTitle());
     }
