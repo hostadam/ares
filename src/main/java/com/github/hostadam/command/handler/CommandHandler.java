@@ -57,7 +57,7 @@ public class CommandHandler {
         for(Method method : object.getClass().getMethods()) {
             if(!method.isAnnotationPresent(AresCommand.class)
                     || method.getParameterCount() < 1
-                    || !method.getParameters()[0].getType().isAssignableFrom(CommandSender.class)) {
+                    || CommandSender.class.isAssignableFrom(method.getParameters()[0].getType())) {
                 continue;
             }
 

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -26,7 +27,7 @@ public class BoardObjective {
     public BoardObjective(Scoreboard scoreboard) {
         this.scoreboard = scoreboard;
         this.title = "Loading...";
-        this.lines = new HashMap<>();
+        this.lines = new ConcurrentHashMap<>();
         this.objective = scoreboard.registerNewObjective("buffered", Criteria.DUMMY, this.title);
     }
 
