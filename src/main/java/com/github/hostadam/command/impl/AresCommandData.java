@@ -50,7 +50,6 @@ public class AresCommandData {
 
                 if(parameter.getType() == String[].class) {
                     if(i > args.length) {
-                        requiredArgCount++;
                         objects[i] = new String[] {};
                     } else {
                         String[] arrayCopy = Arrays.copyOfRange(args, i - 1, args.length);

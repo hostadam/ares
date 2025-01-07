@@ -197,6 +197,12 @@ public class PlayerUtils {
         Arrays.stream(items).forEach(itemStack -> giveItem(player, itemStack));
     }
 
+    public static void broadcast(String permission, String message) {
+        Bukkit.getOnlinePlayers().stream()
+                .filter(player -> player.hasPermission(permission))
+                .forEach(player -> player.sendMessage(message));
+    }
+
     public static void connectPlayer(JavaPlugin plugin, Player player, String server) {
         ByteArrayDataOutput output = ByteStreams.newDataOutput();
 
