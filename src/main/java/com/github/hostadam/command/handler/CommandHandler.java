@@ -54,25 +54,22 @@ public class CommandHandler {
 
     public void register(Object object) {
         if(this.map == null) return;
-        for(Method method : object.getClass().getMethods()) {
+        for(Method method : object.getClass().getDeclaredMethods()) {
             if(!method.isAnnotationPresent(AresCommand.class)
                     || method.getParameterCount() < 1
                     || !CommandSender.class.isAssignableFrom(method.getParameters()[0].getType())) {
-                System.out.println("Failed to register sub command from " + object.getClass().getSimpleName() + ", method: " + method.getName() + " (" + method.getParameterCount() + ")");
                 continue;
             }
 
             AresCommand command = method.getAnnotation(AresCommand.class);
             AresCommandData data = new AresCommandData(command, method, object);
             String name = command.labels()[0], parent = command.parent();
-            if(!parent.isEmpty()) System.out.println("Registering subcommand for " + parent + ": (" + name + ")");
 
             if(parent.isEmpty()) {
                 AresCommandImpl impl = new AresCommandImpl(this, data);
                 this.commands.put(name, impl);
 
                 if(this.subCommandQueue.containsKey(name)) {
-                    System.out.println("Processing queue for " + name);
                     this.subCommandQueue.get(name).forEach(impl::addSubCommand);
                 }
 
@@ -81,12 +78,10 @@ public class CommandHandler {
                 List<AresCommandData> subCommands = this.subCommandQueue.computeIfAbsent(parent, string -> new ArrayList<>());
                 subCommands.add(data);
                 this.subCommandQueue.put(parent, subCommands);
-                System.out.println("Subcommand " + name + " added to queue for " + parent);
             } else {
                 AresCommandImpl parentCommand = this.getCommandByLabel(parent);
                 if(parentCommand != null) {
                     parentCommand.addSubCommand(data);
-                    System.out.println("Subcommand " + name + " added to map for " + parent);
                 }
             }
         }

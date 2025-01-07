@@ -62,25 +62,31 @@ public class AresCommandImpl extends Command {
     private void sendUsage(CommandSender sender, String[] args, int page) {
         List<AresCommandData> subCommands;
         final int commandsPerPage = 10;
-        final int maxPages = (int) Math.floor((double) this.subcommands.size() / commandsPerPage);
+        final int maxPages = (int) Math.floor((double) this.subcommands.size() / (double) commandsPerPage);
         if(maxPages == 0) {
             subCommands = this.subcommands;
-        } else if(page > maxPages) {
-            subCommands = this.subcommands.subList(0, Math.min(commandsPerPage, this.subcommands.size()));
-        } else {
+        } else if(page <= maxPages) {
             final int startOfRange = page * commandsPerPage;
             final int endOfRange = (page + 1) * commandsPerPage - 1;
             subCommands = this.subcommands.subList(startOfRange, Math.min(endOfRange, this.subcommands.size()));
+        } else {
+            sender.sendMessage("§cThere " + (maxPages != 1 ? "are" : "is") + " only " + maxPages + " page" + (maxPages != 1 ? "s" : "") + ".");
+            return;
         }
 
         String mainLabel = data.getCommand().labels()[0];
         sender.sendMessage(" ");
         sender.sendMessage("§e§l" + mainLabel.toUpperCase() + " §7(Command Help)");
-        sender.sendMessage("§7§o<> = required, [] = optional");
+        sender.sendMessage("§7<> = §orequired§7, [] = §ooptional");
         sender.sendMessage(" ");
         for(AresCommandData subCommand : subCommands) {
             AresCommand command = subCommand.getCommand();
             sender.sendMessage("§e/" + mainLabel + " " + command.labels()[0] + " " + subCommand.getCommand().usage());
+        }
+
+        if(maxPages > 0) {
+            sender.sendMessage(" ");
+            sender.sendMessage("§7§oShowing page §f" + (page + 1) + " §7out of §f" + maxPages);
         }
 
         sender.sendMessage(" ");
