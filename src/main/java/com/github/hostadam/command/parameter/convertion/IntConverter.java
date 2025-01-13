@@ -5,6 +5,12 @@ import com.google.common.primitives.Ints;
 import org.bukkit.command.CommandSender;
 
 public class IntConverter implements ParameterConverter<Integer> {
+
+    @Override
+    public Integer defaultValue() {
+        return -1;
+    }
+
     @Override
     public Integer convert(String arg) {
         if(Ints.tryParse(arg) == null) {

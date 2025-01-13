@@ -35,12 +35,12 @@ public class AresCommandImpl extends Command {
             if(args.length > 0) {
                 String subcommandString = args[0];
                 if(subcommandString.equalsIgnoreCase("help")) {
-                    int page = 0;
+                    int page = 1;
                     if(args.length > 1 && Ints.tryParse(args[1]) != null) {
                         page = Integer.parseInt(args[1]);
                     }
 
-                    this.sendUsage(sender, args, page);
+                    this.sendUsage(sender, args, page - 1);
                     return true;
                 }
 
@@ -60,6 +60,10 @@ public class AresCommandImpl extends Command {
     }
 
     private void sendUsage(CommandSender sender, String[] args, int page) {
+        if(page < 0) {
+            page = 0;
+        }
+
         List<AresCommandData> subCommands;
         final int commandsPerPage = 10;
         final int maxPages = (int) Math.floor((double) this.subcommands.size() / (double) commandsPerPage);

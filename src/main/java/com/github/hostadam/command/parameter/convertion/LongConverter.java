@@ -8,8 +8,18 @@ import org.bukkit.command.CommandSender;
 public class LongConverter implements ParameterConverter<Long> {
 
     @Override
+    public Long defaultValue() {
+        return -1L;
+    }
+
+    @Override
     public Long convert(String arg) {
-        return TimeUtils.parseTime(arg);
+        long parsed = TimeUtils.parseTime(arg);
+        if(parsed == -1) {
+            return null;
+        }
+
+        return parsed;
     }
 
     @Override

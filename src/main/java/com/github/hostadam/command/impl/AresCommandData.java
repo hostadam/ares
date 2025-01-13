@@ -70,7 +70,7 @@ public class AresCommandData {
                     if(required) {
                         break;
                     } else {
-                        objects[i] = null;
+                        objects[i] = converter.defaultValue();
                         continue;
                     }
                 }
@@ -78,9 +78,13 @@ public class AresCommandData {
                 String arg = args[i - 1].trim();
                 try {
                     Object object = converter.convert(arg);
-                    if(object == null && required) {
-                        converter.error(sender, arg);
-                        return;
+                    if(object == null) {
+                        if(required) {
+                            converter.error(sender, arg);
+                            return;
+                        }
+
+                        object = converter.defaultValue();
                     }
 
                     objects[i] = object;
@@ -89,7 +93,7 @@ public class AresCommandData {
                         converter.error(sender, arg);
                         return;
                     } else {
-                        objects[i] = null;
+                        objects[i] = converter.defaultValue();
                     }
                 }
             }

@@ -6,6 +6,12 @@ import com.google.common.primitives.Ints;
 import org.bukkit.command.CommandSender;
 
 public class DoubleConverter implements ParameterConverter<Double> {
+
+    @Override
+    public Double defaultValue() {
+        return 0.0d;
+    }
+
     @Override
     public Double convert(String arg) {
         if(Doubles.tryParse(arg) == null) {

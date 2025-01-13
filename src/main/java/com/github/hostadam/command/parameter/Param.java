@@ -7,4 +7,5 @@ import java.lang.annotation.RetentionPolicy;
 public @interface Param {
 
     boolean optional() default false;
+    boolean errorIfEmpty() default true;
 }
