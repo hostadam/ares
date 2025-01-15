@@ -45,7 +45,7 @@ public class BoardObjective {
     }
 
     public void updateLines(List<String> lines) {
-        if(!this.lines.equals(lines)) {
+        if(this.lines.size() != lines.size() || !this.lines.equals(lines)) {
             this.lines.clear();
 
             if(lines.isEmpty()) {
@@ -56,7 +56,7 @@ public class BoardObjective {
 
         int lineLength = Math.min(16, lines.size());
         for(int i = 0; i < lineLength; i++) {
-            this.updateLine(lineLength - i, lines.get(i));
+            this.updateLine(lineLength, lines.get(i));
         }
     }
 
@@ -74,15 +74,17 @@ public class BoardObjective {
             this.shouldUpdateTitle = false;
         }
 
-        this.lines.forEach((index, line) -> {
-            String name = "§" + ChatColor.values()[index].getChar();
+        if(shouldUpdateLines) {
+            this.lines.forEach((index, line) -> {
+                String name = "§" + ChatColor.values()[index].getChar();
 
-            Team team = this.teams.computeIfAbsent(name, t -> scoreboard.registerNewTeam(t));
-            team.setPrefix(line);
+                Team team = this.teams.computeIfAbsent(name, t -> scoreboard.registerNewTeam(t));
+                team.setPrefix(line);
 
-            if(!team.hasEntry(name)) team.addEntry(name);
-            objective.getScore(name).setScore(index);
-        });
+                if(!team.hasEntry(name)) team.addEntry(name);
+                objective.getScore(name).setScore(index);
+            });
+        }
 
         this.shouldUpdateLines = false;
     }

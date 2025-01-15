@@ -81,7 +81,7 @@ public class Board {
 
                 update();
             }
-        }).runTaskTimerAsynchronously(this.plugin, 2, 2);
+        }).runTaskTimerAsynchronously(this.plugin, 10, 2);
     }
 
     public void update() {
