@@ -51,8 +51,10 @@ public class AresCommandImpl extends Command {
                 }
 
                 subcommand.execute(this.commandHandler, sender, Arrays.copyOfRange(args, 1, args.length));
-            } else {
+            } else if(this.data.getCommand().requiredArgs() > 0) {
                 this.sendUsage(sender, args, 0);
+            } else {
+                this.data.execute(this.commandHandler, sender, args);
             }
         }
 
