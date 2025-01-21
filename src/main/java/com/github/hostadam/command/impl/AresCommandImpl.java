@@ -93,7 +93,7 @@ public class AresCommandImpl extends Command {
 
         if(maxPages > 0) {
             sender.sendMessage(" ");
-            sender.sendMessage("§7§oShowing page §f" + (page + 1) + " §7§oout of §f" + maxPages);
+            sender.sendMessage("§7§oShowing page §f" + (page + 1) + " §7§oout of §f" + (maxPages + 1));
         }
 
         sender.sendMessage(" ");
