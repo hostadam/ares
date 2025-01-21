@@ -76,7 +76,8 @@ public class AresCommandImpl extends Command {
             final int endOfRange = (page + 1) * commandsPerPage - 1;
             subCommands = this.subcommands.subList(startOfRange, Math.min(endOfRange, this.subcommands.size()));
         } else {
-            sender.sendMessage("§cThere " + (maxPages != 1 ? "are" : "is") + " only " + maxPages + " page" + (maxPages != 1 ? "s" : "") + ".");
+            final int display = maxPages + 1;
+            sender.sendMessage("§cThere " + (display != 1 ? "are" : "is") + " only " + display + " page" + (display != 1 ? "s" : "") + ".");
             return;
         }
 
@@ -92,7 +93,7 @@ public class AresCommandImpl extends Command {
 
         if(maxPages > 0) {
             sender.sendMessage(" ");
-            sender.sendMessage("§7§oShowing page §f" + (page + 1) + " §7out of §f" + maxPages);
+            sender.sendMessage("§7§oShowing page §f" + (page + 1) + " §7§oout of §f" + maxPages);
         }
 
         sender.sendMessage(" ");
