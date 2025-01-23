@@ -11,6 +11,7 @@ import org.bukkit.command.CommandSender;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 public class AresCommandImpl extends Command {
@@ -66,18 +67,27 @@ public class AresCommandImpl extends Command {
             page = 0;
         }
 
+        List<AresCommandData> allSubCommands = this.subcommands.stream()
+                .filter(command -> command.getCommand().permission().isEmpty() || sender.hasPermission(command.getCommand().permission()))
+                .collect(Collectors.toList());
         List<AresCommandData> subCommands;
         final int commandsPerPage = 10;
-        final int maxPages = (int) Math.floor((double) this.subcommands.size() / (double) commandsPerPage);
+        final int maxPages = (int) Math.floor((double) allSubCommands.size() / (double) commandsPerPage);
+
         if(maxPages == 0) {
-            subCommands = this.subcommands;
+            subCommands = allSubCommands;
         } else if(page <= maxPages) {
             final int startOfRange = page * commandsPerPage;
             final int endOfRange = (page + 1) * commandsPerPage - 1;
-            subCommands = this.subcommands.subList(startOfRange, Math.min(endOfRange, this.subcommands.size()));
+            subCommands = allSubCommands.subList(startOfRange, Math.min(endOfRange, allSubCommands.size()));
         } else {
             final int display = maxPages + 1;
             sender.sendMessage("§cThere " + (display != 1 ? "are" : "is") + " only " + display + " page" + (display != 1 ? "s" : "") + ".");
+            return;
+        }
+
+        if(subCommands.isEmpty()) {
+            sender.sendMessage("§cNo permission.");
             return;
         }
 
