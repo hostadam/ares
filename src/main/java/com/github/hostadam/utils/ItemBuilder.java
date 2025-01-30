@@ -15,6 +15,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -148,8 +149,14 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder itemFlag(ItemFlag... flag) {
-        this.meta.addItemFlags(flag);
+    public ItemBuilder itemFlag(ItemFlag... flags) {
+        this.meta.addItemFlags(flags);
+
+        Arrays.stream(flags)
+                .filter(itemFlag -> itemFlag == ItemFlag.HIDE_ATTRIBUTES).forEach(flag -> {
+            this.meta.setHideTooltip(true);
+        });
+
         return this;
     }
 

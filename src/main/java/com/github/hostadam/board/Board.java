@@ -45,6 +45,10 @@ public class Board {
     }
 
     public void remove() {
+        if(this.nametagHandler != null) {
+            this.nametagHandler.shutdown();
+        }
+
         if(this.updateTask != null) {
             this.updateTask.cancel();
             this.updateTask = null;

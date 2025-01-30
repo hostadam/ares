@@ -25,6 +25,8 @@ public class NametagHandler {
         }
     }
 
+    public void shutdown() {}
+
     private String peel(String name) {
         return name.split("-")[1];
     }

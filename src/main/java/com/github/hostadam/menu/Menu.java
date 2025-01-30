@@ -198,6 +198,7 @@ public abstract class Menu {
     }
 
     public void mainPage() {
+        if(this.parent == null) return;
         this.close();
         this.parent.open();
     }
