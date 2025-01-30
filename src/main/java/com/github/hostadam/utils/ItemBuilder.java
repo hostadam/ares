@@ -151,12 +151,6 @@ public class ItemBuilder {
 
     public ItemBuilder itemFlag(ItemFlag... flags) {
         this.meta.addItemFlags(flags);
-
-        Arrays.stream(flags)
-                .filter(itemFlag -> itemFlag == ItemFlag.HIDE_ATTRIBUTES).forEach(flag -> {
-            this.meta.setHideTooltip(true);
-        });
-
         return this;
     }
 
