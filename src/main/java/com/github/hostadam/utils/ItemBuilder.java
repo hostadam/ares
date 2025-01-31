@@ -4,8 +4,11 @@ import org.bukkit.Color;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -149,7 +152,10 @@ public class ItemBuilder {
         return this;
     }
 
+
     public ItemBuilder itemFlag(ItemFlag... flags) {
+        //this.item.getType().getDefaultAttributeModifiers(EquipmentSlot.HAND);
+        this.meta.addAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE, new AttributeModifier("dummy",0, AttributeModifier.Operation.MULTIPLY_SCALAR_1)); // This is necessary as of 1.20.6
         this.meta.addItemFlags(flags);
         return this;
     }
