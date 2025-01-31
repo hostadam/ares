@@ -1,5 +1,6 @@
 package com.github.hostadam.utils;
 
+import com.google.common.collect.ImmutableMultimap;
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
@@ -154,8 +155,7 @@ public class ItemBuilder {
 
 
     public ItemBuilder itemFlag(ItemFlag... flags) {
-        //this.item.getType().getDefaultAttributeModifiers(EquipmentSlot.HAND);
-        this.meta.addAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE, new AttributeModifier("dummy",0, AttributeModifier.Operation.MULTIPLY_SCALAR_1)); // This is necessary as of 1.20.6
+        this.meta.setAttributeModifiers(ImmutableMultimap.of());
         this.meta.addItemFlags(flags);
         return this;
     }
