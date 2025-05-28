@@ -1,11 +1,10 @@
 package com.github.hostadam.ares.command.handler;
 
 import com.github.hostadam.ares.command.AresCommand;
-import com.github.hostadam.ares.command.parameter.ParameterConverter;
 import com.github.hostadam.ares.command.impl.AresCommandData;
 import com.github.hostadam.ares.command.impl.AresCommandImpl;
+import com.github.hostadam.ares.command.parameter.ParameterConverter;
 import com.github.hostadam.ares.command.parameter.convertion.*;
-import com.github.hostadam.command.parameter.convertion.*;
 import org.bukkit.*;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
