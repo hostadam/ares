@@ -2,10 +2,8 @@ package com.github.hostadam.ares.utils;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.*;
+import org.bukkit.Color;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -15,8 +13,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
 public class PlayerUtils {
@@ -38,6 +42,50 @@ public class PlayerUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Fetch an 8-pixel avatar of the player's name.
+     *
+     * @param playerName the name of the player
+     * @return the image
+     */
+    public static CompletableFuture<BufferedImage> fetchHeadImage(String playerName) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                URL url = new URL("https://minotar.net/avatar/" + playerName + "/8.png");
+                return ImageIO.read(url);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public static CompletableFuture<String[]> buildPlayerHead(String playerName, String[] message) {
+        return fetchHeadImage(playerName)
+                .thenApply(image -> {
+                    if(message.length != image.getHeight()) {
+                        throw new RuntimeException("Message length must be the same as the image.");
+                    }
+
+                    final int height = image.getHeight(), width = image.getWidth();
+                    final String[] result = new String[height];
+
+                    for(int h = 0; h < height; h++) {
+                        StringBuilder builder = new StringBuilder();
+                        for(int w = 0; w < width; w++) {
+                            int rgb = image.getRGB(h, w);
+                            String hexColor = StringUtils.hexFromRGB(rgb);
+                            builder.append("&").append(hexColor).append(StringUtils.BOX);
+                        }
+
+                        builder.append("&r ").append(message[h]);
+                        result[h] = StringUtils.formatHex(builder.toString());
+                    }
+
+                    return result;
+                }
+        );
     }
 
     /**
