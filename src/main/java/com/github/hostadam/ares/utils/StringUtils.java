@@ -6,6 +6,7 @@ import net.md_5.bungee.api.ChatColor;
 import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,6 +19,8 @@ public class StringUtils {
     private static final Pattern LINE_PATTERN = Pattern.compile("%gray_line_(\\d+)%");
     private static final Pattern HEX_PATTERN = Pattern.compile("&#[a-fA-F0-9]{6}");
     private static final Pattern ALPHANUMERIC_PATTERN = Pattern.compile("\\p{Alnum}+");
+    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.#");
+
 
     /**
      * Convert a packed RGB value to a hex string
@@ -59,14 +62,24 @@ public class StringUtils {
         return ChatColor.translateAlternateColorCodes('&', message.replace("%menu_line%", makeLine(40)));
     }
 
+    public static String formatBigNumeric(double value) {
+        if(value >= 1000000000) {
+            return DECIMAL_FORMAT.format(value / 1000000000) + "B";
+        } else if(value >= 1000000.0) {
+            return DECIMAL_FORMAT.format(value / 1000000.0) + "M";
+        } else if(value >= 1000.0) {
+            return DECIMAL_FORMAT.format(value / 1000.0) + "M";
+        } else {
+            return value % 1 == 0 ? String.valueOf((int) value) : DECIMAL_FORMAT.format(value);
+        }
+    }
+
     public static String formatNumeric(double d) {
         return formatNumeric(d, false);
     }
 
     public static String formatNumeric(double d, boolean whole) {
-        BigDecimal decimal = BigDecimal.valueOf(d);
-        decimal = decimal.setScale(1, RoundingMode.HALF_UP);
-        return String.valueOf(whole ? decimal.intValue() : decimal.doubleValue());
+        return whole ? String.valueOf((int) d) : DECIMAL_FORMAT.format(d);
     }
 
     public static String makeLine(int length) {
