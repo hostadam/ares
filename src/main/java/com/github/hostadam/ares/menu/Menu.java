@@ -14,6 +14,7 @@ import java.util.*;
 
 public abstract class Menu {
 
+    private static final int ROW_SIZE = 9;
     private static final Map<UUID, Menu> PLAYER_MENUS = new HashMap<>();
 
     private final JavaPlugin plugin;
@@ -39,7 +40,7 @@ public abstract class Menu {
         this.player = player;
         this.menuTemplate = template;
         this.template = template.getTemplate();
-        this.size = template.getInventoryRows() * 9;
+        this.size = template.getInventoryRows() * ROW_SIZE;
         this.inventory = Bukkit.createInventory(null, this.size, template.getInventoryTitle());
     }
 
@@ -58,12 +59,12 @@ public abstract class Menu {
     }
 
     public void setTemplate(String... template) {
-        if(template.length != this.size / 9) {
+        if(template.length != this.size / ROW_SIZE) {
             throw new UnsupportedOperationException("Template rows must be the same as the size of the inventory.");
         }
 
         for(String row : template) {
-            if(row.length() != 9) {
+            if(row.length() != ROW_SIZE) {
                 throw new UnsupportedOperationException("Each row must be 9 characters long.");
             }
         }
@@ -111,7 +112,7 @@ public abstract class Menu {
         for(int rowIndex = 0; rowIndex < this.template.length; rowIndex++) {
             String row = this.template[rowIndex];
             for(int charIndex = 0; charIndex < row.length(); charIndex++) {
-                int inventorySlot = (9 * rowIndex) + charIndex;
+                int inventorySlot = (ROW_SIZE * rowIndex) + charIndex;
                 char c = row.charAt(charIndex);
                 if(c == ' ') {
                     this.airSlots.add(inventorySlot);
@@ -203,6 +204,38 @@ public abstract class Menu {
         if(this.parent == null) return;
         this.close();
         this.parent.open();
+    }
+
+    public int[] getCenterSlots(int row, int count) {
+        int rowStart = row * ROW_SIZE;
+        int center = rowStart + ROW_SIZE / 2; // 13
+
+        if (count >= ROW_SIZE) {
+            int[] fullRow = new int[ROW_SIZE];
+            for(int i = 0; i < ROW_SIZE; i++) {
+                fullRow[i] = rowStart + i;
+            }
+            return fullRow;
+        }
+
+        int[] slots = new int[ROW_SIZE];
+        int index = 0;
+        int half = count / 2;
+        if(count % 2 == 1) {
+            for (int i = -half; i <= half; i++) {
+                slots[index++] = center + i;
+            }
+        } else {
+            for(int i = -half; i < 0; i++) {
+                slots[index++] = center + i;
+            }
+
+            for(int i = 1; i <= half; i++) {
+                slots[index++] = center + i;
+            }
+        }
+
+        return slots;
     }
 
     public boolean hasNextPage() {

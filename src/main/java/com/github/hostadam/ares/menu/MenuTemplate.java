@@ -19,6 +19,7 @@ public class MenuTemplate {
     private Map<String, ItemStack> itemsByName;
 
     public MenuTemplate(ConfigurationSection section) {
+        if(section == null) throw new IllegalArgumentException("Configuration section is null for menu template");
         this.inventoryTitle = StringUtils.formatHex(section.getString("title", "Inventory"));
         this.inventoryRows = section.getInt("rows", 1);
         this.template = new String[this.inventoryRows];
