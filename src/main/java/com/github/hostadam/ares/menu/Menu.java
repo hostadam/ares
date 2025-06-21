@@ -218,7 +218,7 @@ public abstract class Menu {
             return fullRow;
         }
 
-        int[] slots = new int[ROW_SIZE];
+        int[] slots = new int[count];
         int index = 0;
         int half = count / 2;
         if(count % 2 == 1) {

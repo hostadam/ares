@@ -39,7 +39,7 @@ public class ItemBuilder {
     }
 
     public ItemBuilder amount(int amount) {
-        this.item.setAmount(Math.min(amount, 64));
+        this.item.setAmount(Math.min(amount, this.item.getMaxStackSize()));
         return this;
     }
 
@@ -70,7 +70,6 @@ public class ItemBuilder {
         return this.unbreakable(true);
     }
 
-
     public ItemBuilder unbreakable(boolean shouldApply) {
         this.meta.setUnbreakable(shouldApply);
         this.itemFlag(ItemFlag.HIDE_UNBREAKABLE);
@@ -78,10 +77,12 @@ public class ItemBuilder {
     }
 
     public ItemBuilder lore(String... strings) {
-        for(String string : strings) {
-            addLore(string);
+        List<String> loreList = meta.hasLore() ? meta.getLore() : new ArrayList<>();
+        for(String line : strings) {
+            loreList.add(line);
         }
 
+        meta.setLore(loreList);
         return this;
     }
 
@@ -165,6 +166,11 @@ public class ItemBuilder {
         return this;
     }
 
+    public ItemBuilder tooltip(boolean tooltip) {
+        this.meta.setHideTooltip(!tooltip);
+        return this;
+    }
+
     public ItemBuilder customModelData(int customModelData) {
         this.meta.setCustomModelData(customModelData);
         return this;
@@ -172,7 +178,7 @@ public class ItemBuilder {
 
     public ItemStack build() {
         item.setItemMeta(meta);
-        return item;
+        return item.clone();
     }
 
     public static ItemBuilder fromConfig(ConfigurationSection section) {
@@ -199,6 +205,10 @@ public class ItemBuilder {
 
         if(section.contains("itemFlags")) {
             section.getStringList("itemFlags").stream().map(string -> ItemFlag.valueOf(string.toUpperCase())).forEach(builder::itemFlag);
+        }
+
+        if(section.contains("tooltip")) {
+            builder.tooltip(section.getBoolean("tooltip"));
         }
 
         if(section.contains("potionColor")) {
