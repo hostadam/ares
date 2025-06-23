@@ -1,9 +1,6 @@
 # Ares
 Ares is a plugin library designed to provide developers with easy access to multiple frameworks and utilities.
-
-### 3.0.0
-The latest update, 3.0.0, aims to refine the API. Here's a list of changes:
-* Replaced singleton access with integration into native Bukkit services
+Please note that the latest version, 3.0.0, brings changes to how Ares is accessed. Instead of a singleton, it's now integrated into  native Bukkit services.
 
 ### Important Information
 * Ares has been tested multiple times, but it may contain bugs or other issues. You are encouraged to report this here on GitHub.
