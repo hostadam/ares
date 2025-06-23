@@ -1,5 +1,7 @@
 package com.github.hostadam.ares.chat;
 
+import com.google.common.primitives.Ints;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -13,7 +15,14 @@ public class ChatListener implements Listener {
         Player player = event.getPlayer();
         String message = event.getMessage();
 
+        ChatInput.newInput(player)
+                .nonCancellable()
+                .validator(string -> !string.isEmpty())
+                .read(Bukkit::broadcastMessage);
+
         ChatInput.getPendingInput(player).ifPresent(chatInput -> {
+            event.setCancelled(true);
+
             if(chatInput.isCancellable() && message.equalsIgnoreCase("cancel")) {
                 chatInput.finish();
                 player.sendMessage("§cYour input has been cancelled.");

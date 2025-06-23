@@ -7,24 +7,22 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class ChatInput {
 
-    private static final Map<UUID, ChatInput> INPUT_MAP = new HashMap<>();
+    private static final Map<UUID, ChatInput> INPUTS = new ConcurrentHashMap<>();
 
-    private UUID uniqueId;
-    @Getter
-    private Predicate<String> validator;
-    @Getter
-    private Consumer<String> consumer;
-    @Getter
-    private boolean cancellable = true;
+    private final UUID uniqueId;
+    @Getter private Predicate<String> validator;
+    @Getter private Consumer<String> consumer;
+    @Getter private boolean cancellable = true;
 
     public ChatInput(UUID uniqueId) {
         this.uniqueId = uniqueId;
-        INPUT_MAP.put(uniqueId, this);
+        INPUTS.put(uniqueId, this);
     }
 
     public ChatInput(Player player) {
@@ -47,11 +45,15 @@ public class ChatInput {
     }
 
     public void finish() {
-        INPUT_MAP.remove(this.uniqueId);
+        INPUTS.remove(this.uniqueId);
     }
 
     public static Optional<ChatInput> getPendingInput(Player player) {
-        return Optional.ofNullable(INPUT_MAP.get(player.getUniqueId()));
+        return Optional.ofNullable(INPUTS.get(player.getUniqueId()));
+    }
+
+    public static ChatInput newInput(Player player) {
+        return new ChatInput(player);
     }
 
 }

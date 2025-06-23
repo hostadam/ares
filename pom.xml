@@ -6,7 +6,7 @@
 
     <groupId>com.github.hostadam</groupId>
     <artifactId>ares</artifactId>
-    <version>2.1.5</version>
+    <version>3.0.0</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -32,7 +32,7 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.30</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

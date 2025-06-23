@@ -7,19 +7,20 @@ import org.bukkit.scoreboard.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Getter
 public class BoardObjective {
 
-    private Scoreboard scoreboard;
-    private Objective objective;
+    private final Scoreboard scoreboard;
+    private final Objective objective;
 
     private String title;
     private Set<String> previousLines;
-    private Map<Integer, String> lines;
     private final Map<String, Team> teams = new HashMap<>();
+    private final Map<Integer, String> lines = new HashMap<>();
 
     private boolean shouldUpdateTitle = false, shouldUpdateLines = false;
 
@@ -27,7 +28,6 @@ public class BoardObjective {
         this.scoreboard = scoreboard;
         this.title = "Loading...";
         this.previousLines = new HashSet<>();
-        this.lines = new ConcurrentHashMap<>();
         this.objective = scoreboard.registerNewObjective("buffered", Criteria.DUMMY, this.title);
     }
 
@@ -39,50 +39,47 @@ public class BoardObjective {
         }
     }
 
-    public void updateTitle(String title) {
-        if(!this.title.equals(title)) {
-            this.title = title;
+    public void updateTitle(String newTitle) {
+        if(!this.title.equals(newTitle)) {
+            this.title = newTitle;
             this.shouldUpdateTitle = true;
         }
     }
 
     public void updateLine(int lineNumber, String line) {
         String currentLine = this.lines.get(lineNumber);
-        if(currentLine == null || !currentLine.equals(line)) {
+        if(!line.equals(currentLine)) {
             this.lines.put(lineNumber, line);
             this.shouldUpdateLines = true;
         }
     }
 
     private String[] getPrefixAndSuffix(String text) {
-        String prefix, suffix;
-        String newText = ChatColor.translateAlternateColorCodes('&', text);
-        if(newText.length() < 64) {
-            prefix = text;
-            suffix = "";
-        } else {
-            int splitAt = text.charAt(63) == ChatColor.COLOR_CHAR ? 63 : 64;
-            prefix = text.substring(0, splitAt);
-            suffix = text.substring(0, Math.min((ChatColor.getLastColors(prefix) + text.substring(splitAt)).length(), 64));
+        String translated = ChatColor.translateAlternateColorCodes('&', text);
+        if(translated.length() <= 64) {
+            return new String[] { translated, "" };
         }
 
+        int splitAt = text.charAt(63) == ChatColor.COLOR_CHAR ? 63 : 64;
+        String prefix = translated.substring(0, splitAt);
+        String suffix = ChatColor.getLastColors(prefix) + translated.substring(splitAt);
+        suffix = suffix.length() > 64 ? suffix.substring(0, 64) : suffix;
         return new String[] { prefix, suffix };
     }
 
-    public void updateLines(List<String> lines) {
-        if(this.lines.size() != lines.size() || !this.lines.equals(lines)) {
+    public void updateLines(List<String> newLines) {
+        if(newLines.size() != this.lines.size() || !this.lines.values().equals(newLines)) {
             this.lines.clear();
 
-            if(lines.isEmpty()) {
+            if(newLines.isEmpty()) {
                 this.shouldUpdateLines = true;
                 return;
             }
-        }
 
-        int count = 0;
-        int totalLines = Math.min(64, lines.size());
-        for(String line : lines) {
-            this.updateLine(totalLines - count++, line);
+            int totalLines = Math.min(64, newLines.size());
+            for(int i = 0; i < totalLines; i++) {
+                this.updateLine(totalLines - i, newLines.get(i));
+            }
         }
     }
 
@@ -99,25 +96,22 @@ public class BoardObjective {
                 String name = "§" + ChatColor.values()[index].getChar();
                 String[] text = this.getPrefixAndSuffix(line);
 
-                Team team = this.teams.computeIfAbsent(name, t -> scoreboard.registerNewTeam(t));
+                Team team = this.teams.computeIfAbsent(name, scoreboard::registerNewTeam);
                 team.setPrefix(text[0]);
                 team.setSuffix(text[1]);
 
-                newLines.add(name);
-
                 if(!team.hasEntry(name)) team.addEntry(name);
                 objective.getScore(name).setScore(index);
+
+                newLines.add(name);
             });
 
-            this.previousLines.removeAll(newLines);
-            this.previousLines.removeIf(string -> {
-                Team team = this.scoreboard.getTeam(string);
-                if(team != null) {
-                    team.removeEntry(string);
+            this.previousLines.forEach(previousLine -> {
+                if(!newLines.contains(previousLine)) {
+                    Team team = scoreboard.getTeam(previousLine);
+                    if(team != null) team.removeEntry(previousLine);
+                    scoreboard.resetScores(previousLine);
                 }
-
-                this.scoreboard.resetScores(string);
-                return true;
             });
 
             this.previousLines = newLines;

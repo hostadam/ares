@@ -5,27 +5,29 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
-@Getter
 public class Board {
 
-    private transient JavaPlugin plugin;
+    private final JavaPlugin plugin;
+    private final Player player;
+    private final BoardObjective objective;
 
-    private Player player;
-    private BoardObjective objective;
-    @Setter
     private BoardAdapter adapter;
+    private BukkitTask updateTask;
 
+    @Getter
     private Scoreboard scoreboard;
-    private BukkitRunnable updateTask;
-
+    @Getter
     private boolean sidebarVisibility = true;
-    @Setter
+    @Getter @Setter
     private NametagHandler nametagHandler;
 
     public Board(JavaPlugin plugin, Player player, BoardAdapter adapter) {
@@ -34,9 +36,14 @@ public class Board {
         this.adapter = adapter;
         this.scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         this.objective = new BoardObjective(this.scoreboard);
-        this.updateVisibility(true);
 
-        player.setScoreboard(scoreboard);
+        this.updateVisibility(true);
+        player.setScoreboard(this.scoreboard);
+    }
+
+    public void setAdapter(BoardAdapter adapter) {
+        this.adapter = adapter;
+        this.update();
     }
 
     public void setTab(String header, String footer) {
@@ -46,6 +53,8 @@ public class Board {
     public void remove() {
         if(this.nametagHandler != null) {
             this.nametagHandler.shutdown();
+
+            if(this.nametagHandler instanceof Listener listener) HandlerList.unregisterAll(listener);
         }
 
         if(this.updateTask != null) {
@@ -63,6 +72,9 @@ public class Board {
     public void updateVisibility(boolean visible) {
         if(visible && this.updateTask == null) {
             this.initialize();
+        } else if(!visible && this.updateTask != null) {
+            this.updateTask.cancel();
+            this.updateTask = null;
         }
 
         this.sidebarVisibility = visible;
@@ -74,17 +86,7 @@ public class Board {
             this.updateTask.cancel();
         }
 
-        (this.updateTask = new BukkitRunnable() {
-            @Override
-            public void run() {
-                if(!sidebarVisibility) {
-                    cancel();
-                    return;
-                }
-
-                update();
-            }
-        }).runTaskTimerAsynchronously(this.plugin, 10, 2);
+        this.updateTask = Bukkit.getScheduler().runTaskTimer(this.plugin, this::update, 20, 2);
     }
 
     public void update() {
