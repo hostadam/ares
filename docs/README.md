@@ -1,6 +1,11 @@
 # Ares
 Ares is a plugin library designed to provide developers with easy access to multiple frameworks and utilities.
-Please note that the latest version, 3.0.0, brings changes to how Ares is accessed. Instead of a singleton, it's now integrated into  native Bukkit services.
+
+### 3.0.0
+Please note that the latest version, 3.0.0, brings many changes to Ares.
+* Instead of a singleton, it's now integrated into native Bukkit services. Review the updated section below for initialization.
+* The scoreboard system has been optimized heavily, and a critical issue with concurrency has been fixed.
+* Improved chat input API
 
 ### Important Information
 * Ares has been tested multiple times, but it may contain bugs or other issues. You are encouraged to report this here on GitHub.
@@ -11,6 +16,7 @@ Please note that the latest version, 3.0.0, brings changes to how Ares is access
 * Nametags API (for player list sorting / rank prefixes)
 * Annotation-based command API
 * Menu API with pagination
+* Player chat input API 
 * Static utilities
 
 ### For developers
@@ -115,7 +121,7 @@ And we are done!
 
 ### Nametags
 Ares has no default nametag implementation. You need to create your own ```NametagHandler```.
-The ```NametagHandler``` contains the following provided methods: ```getTeam(String teamName)```, ```replace(String oldTeamName, String newTeamName, String playerEntry)```, ```createTeam(String name, int priority)```.
+The ```NametagHandler``` contains the following provided methods: ```getTeam(String teamName)```, ```switchTeamOfPlayer(String oldTeamName, String newTeamName, String playerEntry)```, ```createTeam(String name, int priority)``` and ```shutdown``` which should be overridden.
 
 To register your nametag handler, create an event listener to assign the nametag handler to the player's board.
 ```
@@ -181,3 +187,16 @@ To create subcommands, the ```AresCommand``` annotation has a ```parent``` field
 )
 ```
 Register the sub command in the same way as above.
+
+## Chat Input
+Sometimes you want players to enter an input in chat. Ares has an API to streamline this process. 
+Here is an example of the chat input
+``` java
+ChatInput.newInput(player)
+        .nonCancellable()
+        .validator(string -> !string.isEmpty())
+        .read(Bukkit::broadcastMessage);
+```
+The ```nonCancellable``` method ensures the user cannot opt-out of the input. Otherwise, by typing 'cancel', they can end the process without submitting an input.
+
+
