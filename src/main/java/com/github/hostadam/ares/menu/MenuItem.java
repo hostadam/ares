@@ -1,107 +1,52 @@
 package com.github.hostadam.ares.menu;
 
+import com.github.hostadam.ares.utils.ItemBuilder;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 
 @Getter
 public class MenuItem {
 
-    //TODO: load from config.
-
     @Setter
     private ItemStack itemStack;
     private ItemStack fallbackItem;
+
+    private char menuChar = 0;
     private String permission = "";
     private Type type = Type.NORMAL;
-    private BiConsumer<InventoryClickEvent, MenuItem> clickEvent;
-
-    private Map<String, Supplier<Object>> placeholders;
+    private MenuItemClickHandler clickHandler;
 
     public MenuItem(ItemStack itemStack) {
-        if(itemStack == null) itemStack = new ItemStack(Material.AIR);
-        this.itemStack = itemStack;
+        this.itemStack = (itemStack == null ? new ItemStack(Material.AIR) : itemStack);
     }
 
-    private void replaceDisplayName(ItemMeta meta) {
-        if(!meta.getDisplayName().contains("%")) return;
+    public MenuItem(ConfigurationSection section) {
+        this.itemStack = ItemBuilder.fromConfig(section.getConfigurationSection("item")).build();
+        this.permission = section.getString("permission", "");
+        this.type = Type.valueOf(section.getString("type", "NORMAL"));
 
-        for(Map.Entry<String, Supplier<Object>> entry : this.placeholders.entrySet()) {
-            String key = entry.getKey();
-            Object object = entry.getValue().get();
-            if(object instanceof List<?>) continue;
-            meta.setDisplayName(meta.getDisplayName().replace(key, object.toString()));
+        if(section.contains("menu-char")) {
+            this.menuChar = section.getString("menu-char").charAt(0);
+        }
+
+        if(section.contains("fallbackItem")) {
+            this.fallbackItem = ItemBuilder.fromConfig(section.getConfigurationSection("fallback")).build();
         }
     }
 
-    public ItemStack buildItem() {
-        if(this.placeholders == null || !this.itemStack.hasItemMeta()) {
-            return this.itemStack;
-        }
-
-        ItemStack cloned = this.itemStack.clone();
-        ItemMeta meta = cloned.getItemMeta();
-
-        if(!meta.hasDisplayName() && !meta.hasLore()) {
-            return this.itemStack;
-        }
-
-        this.replaceDisplayName(meta);
-        List<String> newLore = new ArrayList<>();
-
-        for(int index = 0; index < meta.getLore().size(); index++) {
-            String lore = meta.getLore().get(index);
-            boolean expanded = false;
-
-            for(Map.Entry<String, Supplier<Object>> entry : this.placeholders.entrySet()) {
-                String key = entry.getKey();
-                Supplier<Object> value = entry.getValue();
-                Object replacement = value.get();
-
-                if(!lore.contains(key)) continue;
-
-                if(replacement instanceof List<?> list) {
-                    if(!expanded) {
-                        list.forEach(object -> newLore.add(lore.replace(key, object.toString())));
-                        expanded = true;
-                        continue;
-                    }
-
-                    for(int listIndex = 0; listIndex < list.size(); listIndex++) {
-                        Object object = list.get(listIndex);
-                        final int newIndex = index + listIndex;
-                        if(newIndex >= newLore.size()) continue;
-                        String loreLine = newLore.get(newIndex);
-                        newLore.set(newIndex, loreLine.replace(key, object.toString()));
-                    }
-                } else {
-                    newLore.add(lore.replace(key, replacement.toString()));
-                }
-            }
-        }
-
-        meta.setLore(newLore);
-        cloned.setItemMeta(meta);
-        return cloned;
+    public boolean hasAssignedChar() {
+        return this.menuChar != 0;
     }
 
-    public MenuItem withPlaceholder(String key, Supplier<Object> value) {
-        if(this.placeholders == null) {
-            this.placeholders = new HashMap<>();
-        }
-
-        this.placeholders.put(key, value);
-        return this;
+    public ItemStack buildItem(Menu<?> menu) {
+        if(this.checkIfFallback(menu)) return this.fallbackItem.clone();
+        return itemStack.clone();
     }
 
     public MenuItem permission(String permission) {
@@ -109,8 +54,8 @@ public class MenuItem {
         return this;
     }
 
-    public MenuItem onClick(BiConsumer<InventoryClickEvent, MenuItem> clickEvent) {
-        this.clickEvent = clickEvent;
+    public MenuItem click(MenuItemClickHandler clickEvent) {
+        this.clickHandler = clickEvent;
         return this;
     }
 
@@ -119,13 +64,33 @@ public class MenuItem {
         return this;
     }
 
-    public MenuItem fallback(ItemStack itemStack) {
-        this.fallbackItem = itemStack;
+    public MenuItem fallback(ItemStack fallbackItem) {
+        this.fallbackItem = fallbackItem;
         return this;
     }
 
-    public boolean isPaginated() {
-        return this.type != Type.NORMAL;
+    public void handlePagedClick(Menu<?> menu) {
+        switch (this.type) {
+            case PREVIOUS_PAGE:
+                menu.previousPage();
+                break;
+            case NEXT_PAGE:
+                menu.nextPage();
+                break;
+            case BACK_TO_MAIN_PAGE:
+                menu.switchToParentMenu();
+                break;
+        }
+    }
+
+    public boolean checkIfFallback(Menu<?> menu) {
+        if(this.fallbackItem == null) return false;
+        return switch (this.type) {
+            case PREVIOUS_PAGE -> !menu.hasPreviousPage();
+            case NEXT_PAGE -> !menu.hasNextPage();
+            case BACK_TO_MAIN_PAGE -> !menu.hasParent();
+            default -> !this.permission.isEmpty() && !menu.player.hasPermission(this.permission);
+        };
     }
 
     public boolean hasFallbackItem() {
@@ -137,5 +102,14 @@ public class MenuItem {
         BACK_TO_MAIN_PAGE,
         NEXT_PAGE,
         PREVIOUS_PAGE;
+
+        public boolean isPageControl() {
+            return this == NEXT_PAGE || this == PREVIOUS_PAGE || this == BACK_TO_MAIN_PAGE;
+        }
+    }
+
+    @FunctionalInterface
+    public interface MenuItemClickHandler {
+        void handle(InventoryClickEvent event, MenuItem item);
     }
 }

@@ -12,21 +12,20 @@ public class MenuListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        Menu.getPlayerMenu(player).ifPresent(Menu::close);
+        Menu.get(player).ifPresent(Menu::close);
     }
 
     @EventHandler
     public void onClose(InventoryCloseEvent event) {
         Player player = (Player) event.getPlayer();
-        Menu.getPlayerMenu(player).ifPresent(Menu::close);
+        Menu.get(player).ifPresent(Menu::close);
     }
 
     @EventHandler
     public void onClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
-        Menu.getPlayerMenu(player).ifPresent(menu -> {
-            boolean cancel = menu.click(event);
-            event.setCancelled(cancel);
-        });
+        int slot = event.getRawSlot();
+        if(slot == -1) return;
+        Menu.get(player).ifPresent(menu -> menu.click(event));
     }
 }
