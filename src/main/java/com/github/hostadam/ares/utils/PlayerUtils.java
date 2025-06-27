@@ -258,4 +258,13 @@ public class PlayerUtils {
         output.writeUTF(server);
         player.sendPluginMessage(plugin, "BungeeCord", output.toByteArray());
     }
+
+    public static void kickPlayer(JavaPlugin plugin, OfflinePlayer target, String reason) {
+        ByteArrayDataOutput output = ByteStreams.newDataOutput();
+
+        output.writeUTF("KickPlayer");
+        output.writeUTF(target.getName());
+        output.writeUTF(reason);
+        Bukkit.getServer().sendPluginMessage(plugin, "BungeeCord", output.toByteArray());
+    }
 }

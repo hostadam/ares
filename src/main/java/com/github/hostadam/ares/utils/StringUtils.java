@@ -12,11 +12,8 @@ import java.util.regex.Pattern;
 
 public class StringUtils {
 
-    private static final String GRAY_LINE = "§7§m";
     public static final char BOX = '⬛';
-
     public static final Pattern UNICODE_PRIVATE_PATTERN = Pattern.compile("[\\uE000-\\uF8FF]");
-    private static final Pattern LINE_PATTERN = Pattern.compile("%gray_line_(\\d+)%");
     private static final Pattern HEX_PATTERN = Pattern.compile("&#[a-fA-F0-9]{6}");
     private static final Pattern ALPHANUMERIC_PATTERN = Pattern.compile("\\p{Alnum}+");
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.#");
@@ -51,15 +48,7 @@ public class StringUtils {
             match = HEX_PATTERN.matcher(message);
         }
 
-        Matcher lineMatcher = LINE_PATTERN.matcher(message);
-        if(lineMatcher.find()) {
-            String number = lineMatcher.group();
-            if(Ints.tryParse(number) != null) {
-                return makeLine(Integer.parseInt(number));
-            }
-        }
-
-        return ChatColor.translateAlternateColorCodes('&', message.replace("%menu_line%", makeLine(40)));
+        return ChatColor.translateAlternateColorCodes('&', message);
     }
 
     public static String formatBigNumeric(double value) {
@@ -80,10 +69,6 @@ public class StringUtils {
 
     public static String formatNumeric(double d, boolean whole) {
         return whole ? String.valueOf((int) d) : DECIMAL_FORMAT.format(d);
-    }
-
-    public static String makeLine(int length) {
-        return GRAY_LINE + " ".repeat(length);
     }
 
     public static boolean isAlphanumeric(String string) {

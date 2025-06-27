@@ -1,4 +1,4 @@
-package com.github.hostadam.ares.utils;
+package com.github.hostadam.ares.data;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -8,15 +8,16 @@ import java.io.IOException;
 
 public class ConfigFile extends YamlConfiguration {
 
+    private JavaPlugin plugin;
     private File file;
 
-    public ConfigFile(JavaPlugin owner, String name) {
-        owner.getDataFolder().mkdirs();
+    public ConfigFile(JavaPlugin plugin, String name) {
+        this.plugin = plugin;
+        this.file = new File(plugin.getDataFolder(), name + ".yml");
 
-        this.file = new File(owner.getDataFolder(), name + ".yml");
         if(!file.exists()) {
             file.getParentFile().mkdirs();
-            owner.saveResource(name + ".yml", false);
+            plugin.saveResource(name + ".yml", false);
         }
 
         this.load();
@@ -38,4 +39,3 @@ public class ConfigFile extends YamlConfiguration {
         }
     }
 }
-

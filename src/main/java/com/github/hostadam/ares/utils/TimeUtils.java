@@ -14,7 +14,6 @@ public class TimeUtils {
             's', TimeUnit.SECONDS.toMillis(1L)
     );
 
-
     /**
      * Parse a long from a string using the y-M-d-h-m-s format.
      *
@@ -57,36 +56,48 @@ public class TimeUtils {
         return (h > 0 ? h + ":" : "") + (min < 10 ? "0" + min : min) + ":" + (sec < 10 ? "0" + sec : sec);
     }
 
+    private static int getDurationCount(long duration, int length, int factor) {
+        if(factor == 0) return (int) (duration / length);
+        return (int) ((duration / length) % factor);
+    }
+
+    private static int[] getDurationCounts(long duration) {
+        int seconds = getDurationCount(duration, 1000, 60);
+        int minutes = getDurationCount(duration, 60000, 60);
+        int hours = getDurationCount(duration, 3600000, 24);
+        int days = getDurationCount(duration, 86400000, 0); // Don't want to wrap days since months / years does not exist
+        return new int[] { seconds, minutes, hours, days };
+    }
+
+    private static String formatDurationWord(int type, int count, boolean compact) {
+        String typeName = switch (type) {
+            case 0 -> (compact ? "d" : " day" + (count != 1 ? "s" : ""));
+            case 1 -> (compact ? "h" : " hour" + (count != 1 ? "s" : ""));
+            case 2 -> (compact ? "m" : " minute" + (count != 1 ? "s" : ""));
+            case 3 -> (compact ? "s" : " second" + (count != 1 ? "s" : ""));
+            default -> "";
+        };
+
+        return count + typeName;
+    }
+
     public static String format(long duration) {
-        if(duration == Long.MAX_VALUE) {
-            return "Permanent";
-        }
+        return format(duration, true);
+    }
 
-        int sec = (int) (duration / 1000) % 60 ;
-        int min = (int) ((duration / (1000*60)) % 60);
-        int hour = (int) ((duration / (1000*60*60)) % 24);
-        int days = (int) ((duration / (1000*60*60*24)) % 365);
+    public static String format(long duration, boolean compact) {
+        if(duration == Long.MAX_VALUE) return "Permanent";
 
-        StringBuilder builder = new StringBuilder();
+        final int[] counts = getDurationCounts(duration);
+        final int seconds = counts[0], minutes = counts[1], hours = counts[2], days = counts[3];
+        final StringBuilder builder = new StringBuilder();
 
-        if(days > 0) {
-            builder.append(days + "d");
-        }
-        if(hour > 0) {
-            builder.append(hour + "h");
-        }
-        if(min > 0) {
-            builder.append(min + "m");
-        }
-        if(sec > 0) {
-            builder.append(sec + "s");
-        }
+        if(days > 0) builder.append(formatDurationWord(0, days, compact));
+        if(hours > 0) builder.append(formatDurationWord(1, hours, compact));
+        if(minutes > 0) builder.append(formatDurationWord(2, minutes, compact));
+        if(seconds > 0) builder.append(formatDurationWord(3, seconds, compact));
 
         String string = builder.toString();
-        if(string.isEmpty()) {
-            string = "0s";
-        }
-
-        return string;
+        return string.isEmpty() ? "0s" : string;
     }
 }
