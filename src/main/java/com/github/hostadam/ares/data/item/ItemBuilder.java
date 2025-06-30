@@ -1,19 +1,14 @@
-package com.github.hostadam.ares.utils;
+package com.github.hostadam.ares.data.item;
 
+import com.github.hostadam.ares.utils.StringUtils;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Multimap;
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.*;
-import org.bukkit.inventory.meta.components.ToolComponent;
-import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ItemBuilder {
@@ -167,85 +162,21 @@ public class ItemBuilder {
         return this;
     }
 
+    public ItemMeta fetchCurrentMeta() {
+        return this.itemMeta;
+    }
+
     public ItemStack build() {
         this.itemStack.setItemMeta(this.itemMeta);
         return this.itemStack.clone();
     }
 
-    public static ItemBuilder fromConfig(ConfigurationSection section) {
-        if(section == null) return null;
-        Material material = Material.getMaterial(section.getString("material").toUpperCase());
-        int amount = section.getInt("amount", 1);
-        ItemBuilder builder = new ItemBuilder(material)
-                .amount(amount)
-                .glow(section.contains("glow") && section.getBoolean("glow"))
-                .unbreakable(section.contains("unbreakable") && section.getBoolean("unbreakable"));
-
-        if(section.contains("durability")) {
-            builder.durability(section.getInt("durability"));
-        }
-
-        if(section.contains("max-stack-size")) {
-            builder.maxStackSize(section.getInt("max-stack-size"));
-        }
-
-        if(section.contains("customModelData")) {
-            builder.customModelData(section.getInt("customModelData"));
-        }
-
-        if(section.contains("playerSkull")) {
-            builder.skull(section.getString("playerSkull"));
-        }
-
-        if(section.contains("dyeColor")) {
-            builder.dyeColor(DyeColor.valueOf(section.getString("dyeColor").toUpperCase()));
-        }
-
-        if(section.contains("itemFlags")) {
-            section.getStringList("itemFlags").stream().map(string -> ItemFlag.valueOf(string.toUpperCase())).forEach(builder::itemFlag);
-        }
-
-        if(section.contains("rarity")) {
-            builder.rarity(ItemRarity.valueOf(section.getString("rarity").toUpperCase()));
-        }
-
-        if(section.contains("tooltip")) {
-            builder.tooltip(section.getBoolean("tooltip"));
-        }
-
-        if(section.contains("potionColor")) {
-            builder.potionColor(Color.fromRGB(section.getInt("potionColor")));
-        }
-
-        if(section.contains("displayName")) {
-            builder.name(StringUtils.formatHex(section.getString("displayName")));
-        }
-
-        if(section.contains("attribute-modifiers")) {
-
-        }
-
-        if(section.contains("enchantments")) {
-            for(String key : section.getConfigurationSection("enchantments").getKeys(false)) {
-                Enchantment enchantment = Enchantment.getByName(key.toUpperCase());
-                if(enchantment == null) continue;
-                int level = section.getInt("enchantments." + key, enchantment.getStartLevel());
-                builder.enchant(enchantment, level);
-            }
-        }
-
-        if(section.contains("lore")) {
-            List<String> lore = section.getStringList("lore")
-                    .stream()
-                    .map(StringUtils::formatHex)
-                    .toList();
-            builder.lore(lore);
-        }
-
-        return builder;
-    }
-
     public static ItemStack create(Material material, String displayName) {
         return new ItemBuilder(material).name(displayName).build();
+    }
+
+    @Deprecated(forRemoval = true, since = "3.2.0")
+    public static ItemBuilder fromConfig(ConfigurationSection section) {
+        return ItemParser.parse(section);
     }
 }

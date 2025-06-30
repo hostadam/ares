@@ -1,14 +1,12 @@
 package com.github.hostadam.ares.menu;
 
-import com.github.hostadam.ares.utils.ItemBuilder;
+import com.github.hostadam.ares.data.item.ItemParser;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.function.BiConsumer;
 
 @Getter
 public class MenuItem {
@@ -27,7 +25,7 @@ public class MenuItem {
     }
 
     public MenuItem(ConfigurationSection section) {
-        this.itemStack = ItemBuilder.fromConfig(section.getConfigurationSection("item")).build();
+        this.itemStack = ItemParser.parse(section.getConfigurationSection("item")).build();
         this.permission = section.getString("permission", "");
         this.type = Type.valueOf(section.getString("type", "NORMAL"));
 
@@ -36,7 +34,7 @@ public class MenuItem {
         }
 
         if(section.contains("fallbackItem")) {
-            this.fallbackItem = ItemBuilder.fromConfig(section.getConfigurationSection("fallback")).build();
+            this.fallbackItem = ItemParser.parse(section.getConfigurationSection("fallback")).build();
         }
     }
 

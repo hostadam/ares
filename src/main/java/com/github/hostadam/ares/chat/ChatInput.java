@@ -16,8 +16,7 @@ public class ChatInput {
     private static final Map<UUID, ChatInput> INPUTS = new ConcurrentHashMap<>();
 
     private final UUID uniqueId;
-    @Getter private Predicate<String> validator;
-    @Getter private Consumer<String> consumer;
+    @Getter private Predicate<String> reader;
     @Getter private boolean cancellable = true;
 
     public ChatInput(UUID uniqueId) {
@@ -29,13 +28,8 @@ public class ChatInput {
         this(player.getUniqueId());
     }
 
-    public ChatInput read(Consumer<String> eventConsumer) {
-        this.consumer = eventConsumer;
-        return this;
-    }
-
-    public ChatInput validator(Predicate<String> eventConsumer) {
-        this.validator = eventConsumer;
+    public ChatInput read(Predicate<String> reader) {
+        this.reader = reader;
         return this;
     }
 

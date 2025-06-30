@@ -8,17 +8,14 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.util.function.Predicate;
+
 public class ChatListener implements Listener {
 
     @EventHandler
     public void onQuit(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
         String message = event.getMessage();
-
-        ChatInput.newInput(player)
-                .nonCancellable()
-                .validator(string -> !string.isEmpty())
-                .read(Bukkit::broadcastMessage);
 
         ChatInput.getPendingInput(player).ifPresent(chatInput -> {
             event.setCancelled(true);
@@ -29,13 +26,12 @@ public class ChatListener implements Listener {
                 return;
             }
 
-            if(chatInput.getValidator() != null && !chatInput.getValidator().test(message)) {
+            Predicate<String> predicate = chatInput.getReader();
+            if(!predicate.test(message)) {
                 player.sendMessage("§cYou have submitted an invalid input. Try again.");
-                return;
+            } else {
+                chatInput.finish();
             }
-
-            chatInput.getConsumer().accept(message);
-            chatInput.finish();
         });
     }
 
