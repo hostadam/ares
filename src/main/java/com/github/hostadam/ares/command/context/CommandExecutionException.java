@@ -1,3 +1,3 @@
-package com.github.hostadam.ares.command.experimental;
+package com.github.hostadam.ares.command.context;
 
 public class CommandExecutionException extends RuntimeException { }

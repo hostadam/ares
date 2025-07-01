@@ -9,10 +9,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface AresCommand {
 
-    String[] labels();
     String parent() default "";
+    String[] labels();
     String description();
     String usage() default "";
     String permission() default "";
-    int requiredArgs() default 0;
 }
