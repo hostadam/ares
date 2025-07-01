@@ -2,7 +2,10 @@ package com.github.hostadam.ares.data.item;
 
 import com.github.hostadam.ares.utils.StringUtils;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
@@ -12,9 +15,12 @@ import org.bukkit.inventory.ItemRarity;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.components.*;
 import org.bukkit.inventory.meta.components.consumable.ConsumableComponent;
+import org.bukkit.inventory.meta.components.consumable.effects.ConsumableApplyEffects;
+import org.bukkit.inventory.meta.components.consumable.effects.ConsumableEffect;
 import org.bukkit.tag.DamageTypeTags;
+import org.w3c.dom.Attr;
 
-import java.util.List;
+import java.util.*;
 
 public class ItemParser {
 
@@ -90,7 +96,27 @@ public class ItemParser {
         ItemMeta itemMeta = builder.fetchCurrentMeta();
         parseModernComponents(itemMeta, section);
 
+        if(section.contains("attributes")) {
+            ConfigurationSection attributesSection = section.getConfigurationSection("attributes");
+            parseAttributes(itemMeta, attributesSection);
+        }
+
         if(section.contains("components")) {
+            ConfigurationSection blocksAttackComponentSection = section.getConfigurationSection("blocksattack");
+            if(blocksAttackComponentSection != null) {
+                parseBlocksAttackComponent(itemMeta, blocksAttackComponentSection);
+            }
+
+            ConfigurationSection jukeboxPlayableComponentSection = section.getConfigurationSection("jukebox");
+            if(jukeboxPlayableComponentSection != null) {
+                parseJukeboxPlayableComponent(itemMeta, jukeboxPlayableComponentSection);
+            }
+
+            ConfigurationSection customModelDataComponentSection = section.getConfigurationSection("custom-model-data");
+            if(customModelDataComponentSection != null) {
+                parseCustomModelDataComponent(itemMeta, customModelDataComponentSection);
+            }
+
             ConfigurationSection toolComponentSection = section.getConfigurationSection("tool");
             if(toolComponentSection != null) {
                 parseToolComponent(itemMeta, toolComponentSection);
@@ -142,6 +168,63 @@ public class ItemParser {
                 meta.setDamageResistant(tag);
             }
         }
+    }
+
+    private static void parseAttributes(ItemMeta meta, ConfigurationSection section) {
+        for(String key : section.getKeys(false)) {
+            NamespacedKey namespacedKey = NamespacedKey.fromString(key);
+            if(namespacedKey == null) continue;
+            Attribute attribute = Registry.ATTRIBUTE.get(namespacedKey);
+            if(attribute == null) continue;
+            ConfigurationSection attributeSection = section.getConfigurationSection(key);
+            AttributeModifier modifier = AttributeModifier.deserialize(attributeSection.getValues(false));
+
+            meta.addAttributeModifier(attribute, modifier);
+        }
+    }
+
+    @SuppressWarnings({ "UnstableApiUsage"})
+    private static void parseJukeboxPlayableComponent(ItemMeta meta, ConfigurationSection section) {
+        if(!meta.hasJukeboxPlayable()) return; // TODO: can be null?
+        JukeboxPlayableComponent component = meta.getJukeboxPlayable();
+        NamespacedKey songKey = NamespacedKey.fromString(section.getString("song-key"));
+        if(songKey == null) return;
+        component.setSongKey(songKey);
+        meta.setJukeboxPlayable(component);
+    }
+
+    @SuppressWarnings({ "UnstableApiUsage"})
+    private static void parseCustomModelDataComponent(ItemMeta meta, ConfigurationSection section) {
+        CustomModelDataComponent component = meta.getCustomModelDataComponent();
+
+        component.setStrings(section.contains("strings") ? section.getStringList("strings") : List.of());
+        component.setFloats(section.contains("floats") ? section.getFloatList("floats") : List.of());
+        component.setFlags(section.contains("flags") ? section.getBooleanList("flags") : List.of());
+
+        if(section.contains("colors")) {
+            List<Color> colors = new ArrayList<>();
+            ConfigurationSection colorSection = section.getConfigurationSection("colors");
+            for(String key : colorSection.getKeys(false)) {
+                try {
+                    Color color = Color.deserialize(colorSection.getConfigurationSection(key).getValues(false));
+                    colors.add(color);
+                } catch (RuntimeException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            component.setColors(colors);
+        }
+
+        meta.setCustomModelDataComponent(component);
+    }
+
+    @SuppressWarnings({ "UnstableApiUsage"})
+    private static void parseBlocksAttackComponent(ItemMeta meta, ConfigurationSection section) {
+        BlocksAttacksComponent component = meta.getBlocksAttacks();
+
+        //TODO: This
+        meta.setBlocksAttacks(component);
     }
 
     @SuppressWarnings({ "UnstableApiUsage"})
