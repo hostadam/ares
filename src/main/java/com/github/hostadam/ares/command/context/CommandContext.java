@@ -4,6 +4,7 @@ import com.github.hostadam.ares.command.data.AresCommandData;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -21,33 +22,23 @@ public class CommandContext {
         this.arguments = arguments;
     }
 
-    private void response(String message) {
+    public void response(String message) {
         this.commandSender.sendMessage(message);
     }
 
-    public <T> T getArgument(int index, T defaultValue) {
+    /** Helper methods **/
+    private <T> T getArgument(int index, T defaultValue) {
         if(index == -1 || index >= arguments.length) return defaultValue;
-
         String value = arguments[index];
         Class<?> clazz = defaultValue.getClass();
         Optional<T> optional = this.helper.parse(clazz, value);
         return optional.orElse(defaultValue);
     }
 
-    public <T> Optional<T> getArgument(int index, Class<T> type) {
+    private <T> Optional<T> getArgument(int index, Class<T> type) {
         if(index == -1 || index >= arguments.length) return Optional.empty();
         String value = arguments[index];
         return this.helper.parse(type, value);
-    }
-
-    public <T> T getArgument(String parameterName, T defaultValue) {
-        int index = this.command.getExpectedParameters().indexOf(parameterName);
-        return this.getArgument(index, defaultValue);
-    }
-
-    public <T> Optional<T> getArgument(String parameterName, Class<T> type) {
-        int index = this.command.getExpectedParameters().indexOf(parameterName);
-        return this.getArgument(index, type);
     }
 
     private <T> Optional<T> getArgument(int index, Class<T> type, String errorMessage) {
@@ -56,8 +47,26 @@ public class CommandContext {
         return optional;
     }
 
-    public <T> T requireArg(int index, Class<T> type, String errorMessage) {
+    /** Public methods **/
+    public <T> T getArgument(String parameterName, T defaultValue) {
+        int index = this.command.getExpectedParameters().indexOf(parameterName);
+        return this.getArgument(index, defaultValue);
+    }
+
+    public <T> T getArgument(String parameterName, Class<T> type, String errorMessage) {
+        int index = this.command.getExpectedParameters().indexOf(parameterName);
         return this.getArgument(index, type, errorMessage).orElseThrow(CommandExecutionException::new);
+    }
+
+    public Optional<String> getStringArgument(String parameterName) {
+        int index = this.command.getExpectedParameters().indexOf(parameterName);
+        if(index == -1 || index >= arguments.length) return Optional.empty();
+        if(index == this.command.getExpectedParameters().size() - 1) {
+            String joined = String.join(" ", Arrays.copyOfRange(arguments, index, arguments.length));
+            return Optional.of(joined);
+        }
+
+        return this.getArgument(index, String.class);
     }
 
     public String senderFormattedName(Function<Player, String> function) {

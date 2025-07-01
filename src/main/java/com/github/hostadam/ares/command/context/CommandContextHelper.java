@@ -15,9 +15,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CommandContextHelper {
 
+    private final Map<Class<?>, ParameterTabCompleter<?>> tabCompleters;
     private final Map<Class<?>, ParameterArgParser<?>> argParsers;
 
     public CommandContextHelper() {
+        this.tabCompleters = new ConcurrentHashMap<>();
         this.argParsers = new ConcurrentHashMap<>();
         this.registerDefaultParsers();
     }
@@ -81,6 +83,10 @@ public class CommandContextHelper {
 
     public <T> void registerParser(Class<T> clazz, ParameterArgParser<T> parser) {
         this.argParsers.put(clazz, parser);
+    }
+
+    public <T> void registerTabCompleter(Class<T> clazz, ParameterTabCompleter<T> tabCompleter) {
+        this.tabCompleters.put(clazz, tabCompleter);
     }
 
     public <T> Optional<T> parse(Class<?> type, String value) {
