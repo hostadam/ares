@@ -1,62 +1,56 @@
 package com.github.hostadam.ares.command.handler;
 
 import com.github.hostadam.ares.command.AresCommand;
-import com.github.hostadam.ares.command.impl.AresCommandData;
-import com.github.hostadam.ares.command.impl.AresCommandImpl;
-import com.github.hostadam.ares.command.parameter.ParameterConverter;
-import com.github.hostadam.ares.command.parameter.convertion.*;
-import org.bukkit.*;
+import com.github.hostadam.ares.command.context.CommandContext;
+import com.github.hostadam.ares.command.context.CommandContextHelper;
+import com.github.hostadam.ares.command.data.AresCommandData;
+import com.github.hostadam.ares.command.data.AresCommandImpl;
+import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.command.CommandMap;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CommandHandler {
 
-    private CommandMap map;
+    private CommandMap commandMap;
+    private final CommandContextHelper contextHelper;
 
-    private final Map<Class<?>, ParameterConverter<?>> parameters;
     private final Map<String, AresCommandImpl> commands;
     private final Map<String, List<AresCommandData>> subCommandQueue;
 
     public CommandHandler() {
-        this.parameters = new HashMap<>();
-        this.commands = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        this.contextHelper = new CommandContextHelper();
+        this.commands = new ConcurrentHashMap<>();
         this.subCommandQueue = new HashMap<>();
 
         try {
             final Server server = Bukkit.getServer();
             Field field = server.getClass().getDeclaredField("commandMap");
             field.setAccessible(true);
-            this.map = (CommandMap) field.get(server);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            this.commandMap = (CommandMap) field.get(server);
+        } catch (NoSuchFieldException | IllegalAccessException exception) {
+            this.commandMap = null;
+            exception.printStackTrace();
         }
+    }
 
-        this.addConverter(boolean.class, new BooleanConverter());
-        this.addConverter(EntityType.class, new EntityTypeConverter());
-        this.addConverter(int.class, new IntConverter());
-        this.addConverter(Material.class, new MaterialConverter());
-        this.addConverter(World.class, new WorldConverter());
-        this.addConverter(GameMode.class, new GameModeConverter());
-        this.addConverter(OfflinePlayer.class, new OfflinePlayerConverter());
-        this.addConverter(Player.class, new OnlinePlayerConverter());
-        this.addConverter(String.class, new StringConverter());
-        this.addConverter(long.class, new LongConverter());
-        this.addConverter(double.class, new DoubleConverter());
-        this.addConverter(ChatColor.class, new ChatColorConverter());
+    public CommandContextHelper context() {
+        return this.contextHelper;
     }
 
     public void register(Object object) {
-        if(this.map == null) return;
+        if(this.commandMap == null) return;
         for(Method method : object.getClass().getDeclaredMethods()) {
             if(!method.isAnnotationPresent(AresCommand.class)
-                    || method.getParameterCount() < 1
-                    || !CommandSender.class.isAssignableFrom(method.getParameters()[0].getType())) {
+                    || method.getParameterCount() != 1
+                    || !CommandContext.class.isAssignableFrom(method.getParameters()[0].getType())) {
                 continue;
             }
 
@@ -72,7 +66,7 @@ public class CommandHandler {
                     this.subCommandQueue.get(name).forEach(impl::addSubCommand);
                 }
 
-                this.map.register(name, impl);
+                this.commandMap.register(name, impl);
             } else if(!this.commands.containsKey(parent)) {
                 List<AresCommandData> subCommands = this.subCommandQueue.computeIfAbsent(parent, string -> new ArrayList<>());
                 subCommands.add(data);
@@ -88,13 +82,5 @@ public class CommandHandler {
 
     public AresCommandImpl getCommandByLabel(String name) {
         return this.commands.get(name);
-    }
-
-    public void addConverter(Class<?> clazz, ParameterConverter<?> converter) {
-        this.parameters.put(clazz, converter);
-    }
-
-    public <T> ParameterConverter<T> getConverter(Class<T> clazz) {
-        return (ParameterConverter<T>) this.parameters.get(clazz);
     }
 }
