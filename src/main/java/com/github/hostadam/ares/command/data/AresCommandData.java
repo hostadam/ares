@@ -1,7 +1,7 @@
 package com.github.hostadam.ares.command.data;
 
 import com.github.hostadam.ares.command.AresCommand;
-import com.github.hostadam.ares.command.TabCompletionMapper;
+import com.github.hostadam.ares.command.tabcompletion.TabCompletionMapper;
 import com.github.hostadam.ares.command.context.CommandContext;
 import com.github.hostadam.ares.command.context.CommandContextHelper;
 import com.github.hostadam.ares.command.context.CommandExecutionException;
@@ -11,6 +11,7 @@ import org.bukkit.command.CommandSender;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Data
 @AllArgsConstructor
@@ -22,7 +23,8 @@ public class AresCommandData {
     private final String usageMessage;
     private final String permission;
     private final int requiredArgs;
-    private final List<String> expectedParameters;
+
+    private final Map<String, Integer> expectedParameters;
     private final Map<String, Class<?>> tabCompleters;
 
     private final Method method;
@@ -37,21 +39,21 @@ public class AresCommandData {
 
         this.method = method;
         this.commandInstance = object;
-        this.expectedParameters = new LinkedList<>();
+        this.expectedParameters = new ConcurrentHashMap<>();
 
-        int argCounter = 0;
+        int argCounter = 0, requiredArgCount = 0;
         if(!this.usageMessage.isEmpty()) {
             for(String token : this.usageMessage.split(" ")) {
                 String cleaned = token.replaceAll("[<>\\[\\]]", "");
-                this.expectedParameters.add(cleaned);
+                this.expectedParameters.put(cleaned, argCounter++);
 
                 if(token.startsWith("<") && token.endsWith(">")) {
-                    argCounter++;
+                    requiredArgCount++;
                 }
             }
         }
 
-        this.requiredArgs = argCounter;
+        this.requiredArgs = requiredArgCount;
         this.tabCompleters = new HashMap<>();
         this.setupTabCompletions();
     }
@@ -63,9 +65,16 @@ public class AresCommandData {
         }
     }
 
+    public int getIndexOf(String key) {
+        return this.expectedParameters.getOrDefault(key, -1);
+    }
+
     public Class<?> getTabCompleterClass(int args) {
         if(args >= this.expectedParameters.size()) return null;
-        String key = this.expectedParameters.get(args);
+
+        Optional<Map.Entry<String, Integer>> optional = this.expectedParameters.entrySet().stream().filter(stringIntegerEntry -> stringIntegerEntry.getValue() == args).findAny();
+        if(optional.isEmpty()) return null;
+        String key = optional.get().getKey();
         if(!this.tabCompleters.containsKey(key)) return null;
         return this.tabCompleters.get(key);
     }

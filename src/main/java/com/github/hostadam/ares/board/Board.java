@@ -3,6 +3,7 @@ package com.github.hostadam.ares.board;
 import com.github.hostadam.ares.board.nametag.NametagHandler;
 import lombok.Getter;
 import lombok.Setter;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
@@ -46,8 +47,8 @@ public class Board {
         this.update();
     }
 
-    public void setTab(String header, String footer) {
-        this.player.setPlayerListHeaderFooter(header, footer);
+    public void setTab(Component header, Component footer) {
+        this.player.sendPlayerListHeaderAndFooter(header, footer);
     }
 
     public void remove() {
@@ -96,9 +97,7 @@ public class Board {
         this.objective.updateLines(this.adapter.lines(player));
         this.objective.update();
 
-        String[] tab = this.adapter.tab(player);
-        if(tab != null && tab.length == 2) {
-            this.setTab(tab[0], tab[1]);
-        }
+        Component header = this.adapter.header(player), footer = this.adapter.footer(player);
+        if(header != null && footer != null) this.setTab(header, footer);
     }
 }

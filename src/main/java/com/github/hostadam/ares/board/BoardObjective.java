@@ -1,6 +1,7 @@
 package com.github.hostadam.ares.board;
 
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.scoreboard.*;
@@ -17,16 +18,16 @@ public class BoardObjective {
     private final Scoreboard scoreboard;
     private final Objective objective;
 
-    private String title;
+    private Component title;
     private Set<String> previousLines;
     private final Map<String, Team> teams = new HashMap<>();
-    private final Map<Integer, String> lines = new HashMap<>();
+    private final Map<Integer, Component> lines = new HashMap<>();
 
     private boolean shouldUpdateTitle = false, shouldUpdateLines = false;
 
     public BoardObjective(Scoreboard scoreboard) {
         this.scoreboard = scoreboard;
-        this.title = "Loading...";
+        this.title = Component.text("Loading...");
         this.previousLines = new HashSet<>();
         this.objective = scoreboard.registerNewObjective("buffered", Criteria.DUMMY, this.title);
     }
@@ -39,8 +40,9 @@ public class BoardObjective {
         }
     }
 
-    public void updateTitle(String newTitle) {
-        if(!this.title.equals(newTitle)) {
+    public void updateTitle(Component newTitle) {
+        Component newTitle = legacySerializer.deserialize(newTitleLegacy);
+        if (!this.title.equals(newTitle)) {
             this.title = newTitle;
             this.shouldUpdateTitle = true;
         }

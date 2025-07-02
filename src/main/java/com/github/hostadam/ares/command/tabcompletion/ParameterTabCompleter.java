@@ -1,4 +1,4 @@
-package com.github.hostadam.ares.command.context;
+package com.github.hostadam.ares.command.tabcompletion;
 
 import org.bukkit.command.CommandSender;
 

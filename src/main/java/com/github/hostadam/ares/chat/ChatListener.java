@@ -1,6 +1,9 @@
 package com.github.hostadam.ares.chat;
 
+import com.github.hostadam.ares.utils.PaperUtils;
 import com.google.common.primitives.Ints;
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,21 +16,22 @@ import java.util.function.Predicate;
 public class ChatListener implements Listener {
 
     @EventHandler
-    public void onQuit(AsyncPlayerChatEvent event) {
+    public void onQuit(AsyncChatEvent event) {
         Player player = event.getPlayer();
-        String message = event.getMessage();
+        Component message = event.message();
 
         ChatInput.getPendingInput(player).ifPresent(chatInput -> {
             event.setCancelled(true);
 
-            if(chatInput.isCancellable() && message.equalsIgnoreCase("cancel")) {
+            String content = PaperUtils.asString(message);
+            if(chatInput.isCancellable() && content.equalsIgnoreCase("cancel")) {
                 chatInput.finish();
                 player.sendMessage("§cYour input has been cancelled.");
                 return;
             }
 
             Predicate<String> predicate = chatInput.getReader();
-            if(!predicate.test(message)) {
+            if(!predicate.test(content)) {
                 player.sendMessage("§cYou have submitted an invalid input. Try again.");
             } else {
                 chatInput.finish();

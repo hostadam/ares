@@ -1,6 +1,7 @@
 package com.github.hostadam.ares.command.context;
 
 import com.github.hostadam.ares.command.data.AresCommandData;
+import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -22,7 +23,7 @@ public class CommandContext {
         this.arguments = arguments;
     }
 
-    public void response(String message) {
+    public void response(Component message) {
         this.commandSender.sendMessage(message);
     }
 
@@ -53,20 +54,25 @@ public class CommandContext {
         return this.helper.parse(type, value);
     }
 
-    private <T> Optional<T> getArgument(int index, Class<T> type, String errorMessage) {
+    private <T> Optional<T> getArgument(int index, Class<T> type, Component errorMessage) {
         Optional<T> optional = getArgument(index, type);
         if(optional.isEmpty()) this.response(errorMessage);
         return optional;
     }
 
     /** Public methods **/
+    public <T> Optional<T> getArgument(String parameterName, Class<T> type) {
+        int index = this.command.getIndexOf(parameterName);
+        return this.getArgument(index, type);
+    }
+
     public <T> T getArgument(String parameterName, T defaultValue) {
-        int index = this.command.getExpectedParameters().indexOf(parameterName);
+        int index = this.command.getIndexOf(parameterName);
         return this.getArgument(index, defaultValue);
     }
 
-    public <T> T getArgument(String parameterName, Class<T> type, String errorMessage) {
-        int index = this.command.getExpectedParameters().indexOf(parameterName);
+    public <T> T getArgument(String parameterName, Class<T> type, Component errorMessage) {
+        int index = this.command.getIndexOf(parameterName);
         return this.getArgument(index, type, errorMessage).orElseThrow(CommandExecutionException::new);
     }
 
@@ -74,7 +80,7 @@ public class CommandContext {
         return commandSender instanceof Player player ? function.apply(player) : "CONSOLE";
     }
 
-    public <T extends CommandSender> T sender(Class<T> type, String error) {
+    public <T extends CommandSender> T sender(Class<T> type, Component error) {
         if(type.isInstance(this.commandSender)) {
             return type.cast(this.commandSender);
         }

@@ -1,5 +1,6 @@
 package com.github.hostadam.ares.command.context;
 
+import com.github.hostadam.ares.command.tabcompletion.ParameterTabCompleter;
 import com.github.hostadam.ares.utils.PlayerUtils;
 import com.github.hostadam.ares.utils.TimeUtils;
 import com.google.common.primitives.Doubles;
@@ -22,6 +23,11 @@ public class CommandContextHelper {
         this.tabCompleters = new ConcurrentHashMap<>();
         this.argParsers = new ConcurrentHashMap<>();
         this.registerDefaultParsers();
+    }
+
+    public <T> ParameterTabCompleter<T> getTabCompletion(Class<T> clazz) {
+        if(!this.tabCompleters.containsKey(clazz)) return null;
+        return (ParameterTabCompleter<T>) this.tabCompleters.get(clazz);
     }
 
     private void registerDefaultParsers() {
