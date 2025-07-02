@@ -1,23 +1,19 @@
 # Ares
 Ares is a plugin library designed to provide developers with easy access to multiple frameworks and utilities.
-
-### 3.0.0
-Please note that the latest version, 3.0.0, brings many changes to Ares.
-* Instead of a singleton, it's now integrated into native Bukkit services. Review the updated section below for initialization.
-* The scoreboard system has been optimized heavily, and a critical issue with concurrency has been fixed.
-* Improved chat input API
+As of version 4 and beyond, support for Spigot has been dropped in favor of PaperMC.
 
 ### Important Information
-* Ares has been tested multiple times, but it may contain bugs or other issues. You are encouraged to report this here on GitHub.
-* Ares is built with 1.20+ but should work from 1.16 and onwards.
+* Ares is not compatible with Bukkit or Spigot servers, only Paper and its' forks.
+* Ares strives to stay up-to-date meaning backward compatibility cannot be guaranteed. It was originally built on 1.21.6.
 
 ### Features
-* Highly-optimized Scoreboard API
-* Nametags API (for player list sorting / rank prefixes)
-* Annotation-based command API
-* Menu API with pagination
-* Player chat input API 
-* Static utilities
+* 100% Paper functionality (e.g. Adventure)
+* Optimized Scoreboard API
+* Player tab list ordering
+* Intuitive Command API
+* Menu framework with pagination support and 100% configurability
+* Basic player chat input API 
+* Set of static utilities 
 
 ### For developers
 If you wish to use Ares for your own server as a library, add to your project's pom.xml. 
@@ -30,11 +26,11 @@ If you wish to use Ares for your own server as a library, add to your project's 
 <dependency>
     <groupId>com.github.hostadam</groupId>
     <artifactId>ares</artifactId>
-    <version>3.0.0</version>
+    <version>4.1.2</version>
 </dependency>
 ```
 Since Ares is an API and not a plugin, it's your responsibility to make sure it's accessible during runtime.
-Shading is likely the most convenient way to do this;
+Shading or using the fancier Paper methods are likely the most convenient ways to do this.
 ```
 <build>
   <plugins>
@@ -75,14 +71,20 @@ public class YourPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        AresImpl ares = new AresImpl(this);
-        Bukkit.getServicesManager().register(Ares.class, ares, this, ServicePriority.Normal);
+        new AresImpl(this);
     }
 }
 ```
-After it's been initialized, you can retrieve Ares through Bukkit services.
+Ares will automatically register itself in the Bukkit services API. There are two ways you can access Ares during runtime.
+
+Method 1: Assigning instance to variable on enable.
 ```java
-Bukkit.getServicesManager().load(Ares.class);
+Ares ares = new AresImpl(this);
+```
+
+Method 2: Accessing via Bukkit services.
+```java
+Ares ares = Bukkit.getServicesManager().load(Ares.class);
 ```
 
 ## Scoreboard API
@@ -90,84 +92,92 @@ The scoreboard framework is all built into Ares. All you need to implement a sco
 
 ### Features
 * Support for custom tab header & tab footer
-* Automatic scoreboard updating
-* Optimized for performance - will only update when it's necessary.
+* Optimized scoreboard updates, minimizing performance impact
 
 ### How to use
-Begin by creating an adapter for your scoreboard:
+Begin by creating a board style for your scoreboard by implementing the BoardStyle interface.
 ``` Java
 public class DefaultBoardAdapter implements BoardAdapter {
+
     @Override
-    public String title(Player player) {
-        return player.getName();
+    public Component title(Player player) {
+        return Component.text("Ares Demo", NamedTextColor.GREEN);
     }
 
     @Override
-    public String[] tab(Player player) {
-        return new String[] { "First line here", "Second line here" };
+    public Component header(Player player) {
+        return Component.text("Ares Demo", NamedTextColor.BLUE);
     }
 
     @Override
-    public List<String> lines(Player player) {
-        return Arrays.asList("Test line");
+    public Component footer(Player player) {
+        return Component.text("Ares Demo", NamedTextColor.GRAY);
+    }
+
+    @Override
+    public List<Component> lines(Player player) {
+        List<Component> lines = new ArrayList<>();
+
+        for(int i = 0; i < ThreadLocalRandom.current().nextInt(16); i++) {
+            lines.add(Component.text("Ares Demo", NamedTextColor.WHITE));
+        }
+
+        return lines;
     }
 }
 ```
-Then, register your adapter:
-``` Java
-ares.scoreboard().setAdapter(YOUR ADAPTER);
+Then, to apply the style and customize any settings, you can use the ```BoardSettings``` builder.
+```java
+this.ares.scoreboard().updateSettings(
+        new BoardSettings()
+                .interval(5)
+                .scoreFormat(NumberFormat.blank())
+                .style(new DevPluginBoard())
+                .tabListOrdering(HumanEntity::getFoodLevel)
+);
 ```
-And we are done!
 
-### Nametags
-Ares has no default nametag implementation. You need to create your own ```NametagHandler```.
-The ```NametagHandler``` contains the following provided methods: ```getTeam(String teamName)```, ```switchTeamOfPlayer(String oldTeamName, String newTeamName, String playerEntry)```, ```createTeam(String name, int priority)``` and ```shutdown``` which should be overridden.
-
-To register your nametag handler, create an event listener to assign the nametag handler to the player's board.
-```
-@EventHandler
-public void onJoin(PlayerJoinEvent event) {
-    Board board = ares.scoreboard().getScoreboard(event.getPlayer());
-    board.setNametagHandler(YOUR HANDLER);
-}
-```
+The ```interval(int)``` sets how often the scoreboard should update (in ticks).
+The ```scoreFormat(NumberFormat)``` allows changing how the score numbers should be rendered.
+The ```style(BoardStyle)``` is for your newly created adapter.
+The ```tabListOrdering(Function<Player, Integer>)``` is for deciding on how players should be ordered on the tablist.
 
 ## Command API
-The command API is aimed to be simple and convenient to developers. It's annotation-based with automatic parameter conversion.
-How does it work?
+The command API aims to be intuitive, yet simple and convenient to developers. 
 
 We need to start by creating a command:
 ``` Java
 public class FeedCommand {
 
     @AresCommand(
-            labels = { "feed", "f" },
-            description = "Feed another player",
-            requiredArgs = 1,
-            usage = "<player>",
-            permission = "ares.feed"
+            labels = { "feed" },
+            description = "Feed yourself or another player",
+            usage = "[player]",
+            permission = "ares.command.feed"
     )
-    public void feed(CommandSender sender, Player target) {
-       target.setFoodLevel(20);
+    public void feed(CommandContext ctx) {
+        Optional<Player> optional = ctx.getArgument("player", Player.class, Component.text("Invalid player.", NamedTextColor.RED));
+        optional.ifPresentOrElse(target -> {
+            target.setFoodLevel(20);
+            target.setSaturation(0.0f);
+            target.setExhaustion(0.0f);
+            target.sendMessage(Component.text("You have been fed!", NamedTextColor.GREEN));
+        }, () -> {
+            Player sender = ctx.sender(Player.class, Component.text("Only players can do this", NamedTextColor.RED));
+            sender.setFoodLevel(20);
+            sender.setSaturation(0.0f);
+            sender.setExhaustion(0.0f);
+            sender.sendMessage(Component.text("You have been fed!", NamedTextColor.GREEN));
+        });
     }
 }
 ```
-The first parameter, CommandSender, must be present in the method parameters for the command to work. If your command should only be executed by players, you can replace CommandSender with Player.
+The ```CommandContext``` parameter is required on all commands. Like Brigadier, it's where you can fetch the sender & resolve arguments.
+I recommend digging into the API and experimenting to understand each argument method since they all serve different purposes.
 
-Any parameters after that is optional. If you wish to add, let's say, an optional argument ```int feedAmount```, then you can add utilize the @Param annotation. If no arg is provided by the player, this value will be null by default. Some parameter types - the primitive types - cannot be null however. Instead, they return values we consider "null", like -1. The optional ```errorIfEmpty``` field of the annotation can be used to send an error message to the player if their arg is invalid.
+In this case, the ```getArgument(String placeholderName, Class<T> type, Component errorMessage)``` is used because it allows sending a custom error message if the user does not enter a valid player. The ```Optional``` ensures that you do not need to specify a player. If the Optional is empty (no player was provided), then it will saturate the sender instead. 
 
-``` Java
-@AresCommand(
-        labels = { "feed", "f" },
-        description = "Feed another player",
-        requiredArgs = 1,
-        usage = "<player> [feedAmount]",
-        permission = "ares.feed"
-)
-public void feed(CommandSender sender, Player target, @Param(optional=true) int feedAmount) {
-    target.setFoodLevel((feedAmount == -1 ? 20 : feedAmount));
-}
-```
+**The usage field in the AresCommand annotation is critical. For required arguments, surround your argument name in <> and for optional arguments, use [].**
 
 To register the command, get the command handler and register:
 ``` java
@@ -175,18 +185,26 @@ ares.commands().register(new FeedCommand());
 ```
 
 #### Subcommands
-To create subcommands, the ```AresCommand``` annotation has a ```parent``` field.
+To create subcommands, the ```AresSubCommand``` annotation can be used which follows the exact same style and syntax as above, it just has an extra ```parent``` field.
 ``` Java
-@AresCommand(
+@AresSubCommand(
        parent = "feed"
        labels = { "example" },
        description = "Example subcommand to feed",
-       requiredArgs = 1,
        usage = "<player>",
        permission = "ares.feed"
 )
 ```
 Register the sub command in the same way as above.
+
+#### Custom Argument Parsers
+Ares has a wide range of supported types of arguments for parsing.
+If you wish to add your own parser, create one using the ```ParameterArgParser<T>``` interface and register it using ```ares.commands().context().registerParser(Class<T> type, ParameterArgParser<T>)```.
+
+#### Tab Completion
+Ares provides support for custom tab completion using the ```@TabCompletionMapper``` interface. Here, you can map the name of an argument to a class that will get resolved automatically.
+
+If you wish to add a custom tab completer, create a ```ParameterTabCompleter``` interface and register it using ```ares.commands().context().registerTabCompleter(Class<T> type, ParameterTabCompleter)```. Now, your custom tab completor can be used as the ```mappedClass``` field in an interface.
 
 ## Chat Input
 Sometimes you want players to enter an input in chat. Ares has an API to streamline this process. 
@@ -194,9 +212,10 @@ Here is an example of the chat input
 ``` java
 ChatInput.newInput(player)
         .nonCancellable()
-        .validator(string -> !string.isEmpty())
         .read(Bukkit::broadcastMessage);
 ```
+
 The ```nonCancellable``` method ensures the user cannot opt-out of the input. Otherwise, by typing 'cancel', they can end the process without submitting an input.
+The ```read()``` method also accepts a ```Predicate<String>```. If it resolves to false, an error message will be sent and they will need to re-type their input.
 
 
