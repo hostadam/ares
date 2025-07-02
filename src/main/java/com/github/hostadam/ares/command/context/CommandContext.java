@@ -29,14 +29,26 @@ public class CommandContext {
     /** Helper methods **/
     private <T> T getArgument(int index, T defaultValue) {
         if(index == -1 || index >= arguments.length) return defaultValue;
-        String value = arguments[index];
         Class<?> clazz = defaultValue.getClass();
+
+        if(clazz == String.class && index == this.command.getExpectedParameters().size() - 1) {
+            String joined = String.join(" ", Arrays.copyOfRange(arguments, index, arguments.length));
+            return (T) Optional.of(clazz.cast(joined));
+        }
+
+        String value = arguments[index];
         Optional<T> optional = this.helper.parse(clazz, value);
         return optional.orElse(defaultValue);
     }
 
     private <T> Optional<T> getArgument(int index, Class<T> type) {
         if(index == -1 || index >= arguments.length) return Optional.empty();
+
+        if (type == String.class && index == this.command.getExpectedParameters().size() - 1) {
+            String joined = String.join(" ", Arrays.copyOfRange(arguments, index, arguments.length));
+            return Optional.of(type.cast(joined));
+        }
+
         String value = arguments[index];
         return this.helper.parse(type, value);
     }
@@ -56,17 +68,6 @@ public class CommandContext {
     public <T> T getArgument(String parameterName, Class<T> type, String errorMessage) {
         int index = this.command.getExpectedParameters().indexOf(parameterName);
         return this.getArgument(index, type, errorMessage).orElseThrow(CommandExecutionException::new);
-    }
-
-    public Optional<String> getStringArgument(String parameterName) {
-        int index = this.command.getExpectedParameters().indexOf(parameterName);
-        if(index == -1 || index >= arguments.length) return Optional.empty();
-        if(index == this.command.getExpectedParameters().size() - 1) {
-            String joined = String.join(" ", Arrays.copyOfRange(arguments, index, arguments.length));
-            return Optional.of(joined);
-        }
-
-        return this.getArgument(index, String.class);
     }
 
     public String senderFormattedName(Function<Player, String> function) {

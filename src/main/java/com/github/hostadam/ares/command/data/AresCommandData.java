@@ -1,6 +1,7 @@
 package com.github.hostadam.ares.command.data;
 
 import com.github.hostadam.ares.command.AresCommand;
+import com.github.hostadam.ares.command.TabCompletionMapper;
 import com.github.hostadam.ares.command.context.CommandContext;
 import com.github.hostadam.ares.command.context.CommandContextHelper;
 import com.github.hostadam.ares.command.context.CommandExecutionException;
@@ -9,9 +10,7 @@ import lombok.Data;
 import org.bukkit.command.CommandSender;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 @Data
 @AllArgsConstructor
@@ -24,6 +23,7 @@ public class AresCommandData {
     private final String permission;
     private final int requiredArgs;
     private final List<String> expectedParameters;
+    private final Map<String, Class<?>> tabCompleters;
 
     private final Method method;
     private final Object commandInstance;
@@ -52,6 +52,22 @@ public class AresCommandData {
         }
 
         this.requiredArgs = argCounter;
+        this.tabCompleters = new HashMap<>();
+        this.setupTabCompletions();
+    }
+
+    private void setupTabCompletions() {
+        if(this.method.isAnnotationPresent(TabCompletionMapper.class)) {
+            Arrays.stream(this.method.getAnnotationsByType(TabCompletionMapper.class))
+                    .forEach(mapper -> this.tabCompleters.put(mapper.key(), mapper.mappedClass()));
+        }
+    }
+
+    public Class<?> getTabCompleterClass(int args) {
+        if(args >= this.expectedParameters.size()) return null;
+        String key = this.expectedParameters.get(args);
+        if(!this.tabCompleters.containsKey(key)) return null;
+        return this.tabCompleters.get(key);
     }
 
     public String getMainLabel() {

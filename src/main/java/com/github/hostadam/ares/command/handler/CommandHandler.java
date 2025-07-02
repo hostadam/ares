@@ -3,6 +3,7 @@ package com.github.hostadam.ares.command.handler;
 import com.github.hostadam.ares.command.AresCommand;
 import com.github.hostadam.ares.command.context.CommandContext;
 import com.github.hostadam.ares.command.context.CommandContextHelper;
+import com.github.hostadam.ares.command.context.ParameterTabCompleter;
 import com.github.hostadam.ares.command.data.AresCommandData;
 import com.github.hostadam.ares.command.data.AresCommandImpl;
 import org.bukkit.Bukkit;
@@ -11,6 +12,7 @@ import org.bukkit.command.CommandMap;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +24,7 @@ public class CommandHandler {
     private CommandMap commandMap;
     private final CommandContextHelper contextHelper;
 
+    private final Map<Class<?>, ParameterTabCompleter<?>> tabCompletions;
     private final Map<String, AresCommandImpl> commands;
     private final Map<String, List<AresCommandData>> subCommandQueue;
 
@@ -29,6 +32,7 @@ public class CommandHandler {
         this.contextHelper = new CommandContextHelper();
         this.commands = new ConcurrentHashMap<>();
         this.subCommandQueue = new HashMap<>();
+        this.tabCompletions = new HashMap<>();
 
         try {
             final Server server = Bukkit.getServer();
@@ -39,6 +43,15 @@ public class CommandHandler {
             this.commandMap = null;
             exception.printStackTrace();
         }
+    }
+
+    public <T> ParameterTabCompleter<T> getTabCompletion(Class<T> clazz) {
+        if(!this.tabCompletions.containsKey(clazz)) return null;
+        return (ParameterTabCompleter<T>) this.tabCompletions.get(clazz);
+    }
+
+    public <T> void registerTabCompletion(Class<T> clazz, ParameterTabCompleter<T> tabCompleter) {
+        this.tabCompletions.put(clazz, tabCompleter);
     }
 
     public CommandContextHelper context() {
