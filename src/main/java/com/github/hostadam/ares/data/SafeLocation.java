@@ -46,10 +46,9 @@ public class SafeLocation implements ConfigurationSerializable {
     }
 
     public SafeLocation centralize() {
-        double x = Math.floor(this.x) + 0.5;
-        double y = Math.floor(this.y) + 0.5;
-        double z = Math.floor(this.z) + 0.5;
-        return new SafeLocation(this.worldName, x, y, z);
+        double x = this.blockX() + 0.5;
+        double z = this.blockZ() + 0.5;
+        return new SafeLocation(this.worldName, x, this.y, z);
     }
 
     public Location toBukkitLocation() {

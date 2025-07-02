@@ -19,13 +19,9 @@ public class ChatInput {
     @Getter private Predicate<String> reader;
     @Getter private boolean cancellable = true;
 
-    public ChatInput(UUID uniqueId) {
-        this.uniqueId = uniqueId;
-        INPUTS.put(uniqueId, this);
-    }
-
     public ChatInput(Player player) {
-        this(player.getUniqueId());
+        this.uniqueId = player.getUniqueId();
+        INPUTS.put(this.uniqueId, this);
     }
 
     public ChatInput read(Predicate<String> reader) {
@@ -42,7 +38,7 @@ public class ChatInput {
         INPUTS.remove(this.uniqueId);
     }
 
-    public static Optional<ChatInput> getPendingInput(Player player) {
+    public static Optional<ChatInput> get(Player player) {
         return Optional.ofNullable(INPUTS.get(player.getUniqueId()));
     }
 

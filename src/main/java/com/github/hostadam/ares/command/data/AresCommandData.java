@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.bukkit.command.CommandSender;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,7 +18,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @AllArgsConstructor
 public class AresCommandData {
 
-    private final String parentName;
     private final String[] commandLabels;
     private final String description;
     private final String usageMessage;
@@ -30,12 +30,11 @@ public class AresCommandData {
     private final Method method;
     private final Object commandInstance;
 
-    public AresCommandData(AresCommand command, Method method, Object object) {
-        this.parentName = command.parent();
-        this.commandLabels = command.labels();
-        this.description = command.description();
-        this.usageMessage = command.usage();
-        this.permission = command.permission();
+    public AresCommandData(String[] labels, String description, String usageMessage, String permission, Method method, Object object) {
+        this.commandLabels = labels;
+        this.description = description;
+        this.usageMessage = usageMessage;
+        this.permission = permission;
 
         this.method = method;
         this.commandInstance = object;
@@ -99,7 +98,7 @@ public class AresCommandData {
 
         try {
             method.invoke(this.commandInstance, context);
-        } catch (CommandExecutionException ignored) {
+        } catch (InvocationTargetException | CommandExecutionException ignored) {
         } catch (Exception exception) {
             exception.printStackTrace();
         }

@@ -5,6 +5,10 @@ import com.github.hostadam.ares.command.handler.CommandHandler;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -13,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 @Getter
 public class AresCommandImpl extends Command {
@@ -42,17 +47,19 @@ public class AresCommandImpl extends Command {
     @Override
     public boolean execute(CommandSender sender, String label, String[] args) {
         if(!this.command.getPermission().isEmpty() && !sender.hasPermission(this.command.getPermission())) {
-            sender.sendMessage("§cNo permission.");
+            sender.sendMessage(Component.text("No permission.", NamedTextColor.RED));
             return true;
         }
 
-        if(args.length < this.command.getRequiredArgs() || (args.length == 0 && !this.subcommands.isEmpty())) {
+        if(this.command.getRequiredArgs() > 0 && args.length < this.command.getRequiredArgs()) {
             this.command.execute(this.commandHandler.context(), sender, args);
             return true;
         }
 
         if(this.subcommands.isEmpty()) {
             this.command.execute(this.commandHandler.context(), sender, args);
+        } else if(args.length == 0) {
+            this.sendUsage(sender, 0);
         } else {
             String arg = args[0].toLowerCase();
             if(arg.equals("help")) {
@@ -73,13 +80,13 @@ public class AresCommandImpl extends Command {
             }
 
             if(!subcommand.getPermission().isEmpty() && !sender.hasPermission(subcommand.getPermission())) {
-                sender.sendMessage("§cNo permission.");
+                sender.sendMessage(Component.text("No permission.", NamedTextColor.RED));
                 return true;
             }
 
             String[] subCommandArgs = Arrays.copyOfRange(args, 1, args.length);
-            if(subCommandArgs.length <= subcommand.getRequiredArgs()) {
-                sender.sendMessage("§cUsage: /" + label + " " + arg + " " + subcommand.getUsageMessage());
+            if(subCommandArgs.length < subcommand.getRequiredArgs()) {
+                sender.sendMessage(Component.text("Usage: /" + label + " " + arg + " " + subcommand.getUsageMessage(), NamedTextColor.RED));
                 return true;
             }
 
@@ -92,12 +99,37 @@ public class AresCommandImpl extends Command {
     @Override
     public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, String[] args, @Nullable Location location) {
         int argCount = args.length;
-        if(argCount > 0) {
-            int argPos = argCount - 1;
-            Class<?> clazz = this.command.getTabCompleterClass(argPos);
-            if(clazz != null) {
-                ParameterTabCompleter<?> tabCompleter = this.commandHandler.context().getTabCompletion(clazz);
-                if(tabCompleter == null) return Collections.emptyList();
+
+        if(!this.subcommands.isEmpty()) {
+            if(argCount == 0) {
+                return new ArrayList<>(this.subcommands.keySet());
+            }
+
+            String first = args[0].toLowerCase();
+            if(argCount == 1) {
+                return this.subcommands.keySet().stream().filter(label -> label.startsWith(first)).toList();
+            }
+
+            AresCommandData sub = this.getSubCommand(first);
+            if(sub != null) {
+                int subArgPos = argCount - 2;
+                Class<?> clazz = sub.getTabCompleterClass(subArgPos);
+                if(clazz != null) {
+                    ParameterTabCompleter<?> tabCompleter = this.commandHandler.context().getTabCompletion(clazz);
+                    if(tabCompleter != null) {
+                        return tabCompleter.suggest(sender, args[argCount - 1]);
+                    }
+                }
+            }
+
+            return Collections.emptyList();
+        }
+
+        int argPos = Math.max(0, argCount - 1);
+        Class<?> clazz = this.command.getTabCompleterClass(argPos);
+        if(clazz != null) {
+            ParameterTabCompleter<?> tabCompleter = this.commandHandler.context().getTabCompletion(clazz);
+            if(tabCompleter != null) {
                 return tabCompleter.suggest(sender, args[argPos]);
             }
         }
@@ -124,29 +156,32 @@ public class AresCommandImpl extends Command {
             final int endOfRange = (page + 1) * commandsPerPage - 1;
             subCommands = allSubCommands.subList(startOfRange, Math.min(endOfRange, allSubCommands.size()));
         } else {
-            sender.sendMessage("§cThere are only " + (maxPages + 1) + " pages.");
+            sender.sendMessage(Component.text("There are only " + (maxPages + 1) + " pages.", NamedTextColor.RED));
             return;
         }
 
         if(subCommands.isEmpty()) {
-            sender.sendMessage("§cNo permission.");
+            sender.sendMessage(Component.text("No permission.", NamedTextColor.RED));
             return;
         }
 
         String mainLabel = this.command.getMainLabel();
-        sender.sendMessage(" ");
-        sender.sendMessage("§e§l" + mainLabel.toUpperCase() + " §7(Command Help)");
-        sender.sendMessage("§7<> = §orequired§7, [] = §ooptional");
-        sender.sendMessage(" ");
+        sender.sendMessage(Component.space());
+        sender.sendMessage(Component.space());
+        sender.sendMessage(Component.text(mainLabel.toUpperCase(), NamedTextColor.YELLOW, TextDecoration.BOLD).append(Component.text(" (Command Help)", NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)));
+        sender.sendMessage(Component.text("<> = required, [] = optional", NamedTextColor.GRAY));
+        sender.sendMessage(Component.space());
+
         for(AresCommandData subCommand : subCommands) {
-            sender.sendMessage("§e/" + mainLabel + " " + subCommand.getMainLabel() + " " + subCommand.getUsageMessage());
+            sender.sendMessage(Component.text("/" + mainLabel + " " + subCommand.getMainLabel() + " " + subCommand.getUsageMessage(), NamedTextColor.YELLOW).append(Component.text(" - " + subCommand.getDescription(), NamedTextColor.GRAY)));
         }
 
         if(maxPages > 0) {
-            sender.sendMessage(" ");
-            sender.sendMessage("§7§oShowing page §f" + (page + 1) + " §7§oout of §f" + (maxPages + 1));
+            sender.sendMessage(Component.space());
+            sender.sendMessage(Component.text("Showing page " + (page + 1) + " out of " + (maxPages + 1), NamedTextColor.GRAY, TextDecoration.ITALIC));
         }
 
-        sender.sendMessage(" ");
+        sender.sendMessage(Component.space());
+        sender.sendMessage(Component.space());
     }
 }

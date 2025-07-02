@@ -28,20 +28,19 @@ public class StringUtils {
         } else if(value >= 1000.0) {
             return DECIMAL_FORMAT.format(value / 1000.0) + "M";
         } else {
-            return value % 1 == 0 ? String.valueOf((int) value) : DECIMAL_FORMAT.format(value);
+            return value % 1 == 0 ? Integer.toString((int) value) : DECIMAL_FORMAT.format(value);
         }
+    }
+
+    public static String formatNumeric(double d, boolean whole) {
+        return whole ? Integer.toString((int) d) : DECIMAL_FORMAT.format(d);
     }
 
     public static String formatNumeric(double d) {
         return formatNumeric(d, false);
     }
 
-    public static String formatNumeric(double d, boolean whole) {
-        return whole ? String.valueOf((int) d) : DECIMAL_FORMAT.format(d);
-    }
-
     public static boolean isAlphanumeric(String string) {
-        Matcher matcher = ALPHANUMERIC_PATTERN.matcher(string);
-        return matcher.matches();
+        return ALPHANUMERIC_PATTERN.matcher(string).matches();
     }
 }

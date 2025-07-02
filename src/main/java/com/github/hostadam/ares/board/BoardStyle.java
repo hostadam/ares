@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 
-public interface BoardAdapter {
+public interface BoardStyle {
 
     Component title(Player player);
     Component header(Player player);

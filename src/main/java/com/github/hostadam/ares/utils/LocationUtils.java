@@ -12,24 +12,17 @@ import java.util.function.Predicate;
 public class LocationUtils {
 
     public static Location generateRandomLocation(World world, int minX, int minZ, int maxX, int maxZ, int maxAttempts, Predicate<Location> condition) {
-        Location location = null;
-
         for(int attempt = 0; attempt < maxAttempts; attempt++) {
-            int x = randomizeCoordinate(minX, maxX);
-            int z = randomizeCoordinate(minZ, maxZ);
+            int x = ThreadLocalRandom.current().nextInt(minX, maxX);
+            int z = ThreadLocalRandom.current().nextInt(minZ, maxZ);
 
             Location highest = world.getHighestBlockAt(x, z).getLocation();
             if(condition.test(highest)) {
-                location = highest.clone().add(0.0, 1.0, 0.0);
-                break;
+                return highest.clone().add(0.0, 1.0, 0.0);
             }
         }
 
-        return location;
-    }
-
-    private static int randomizeCoordinate(int min, int max) {
-        return ThreadLocalRandom.current().nextInt(max - min) + min;
+        return null;
     }
 
     public static Location centralize(Location location) {

@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 public class TimeUtils {
 
-    private static final Map<Character, Long> CHARACTERS = Map.of(
+    private static final Map<Character, Long> TIME_UNITS = Map.of(
             'y', TimeUnit.DAYS.toMillis(365L),
             'M', TimeUnit.DAYS.toMillis(30L),
             'd', TimeUnit.DAYS.toMillis(1L),
@@ -14,90 +14,53 @@ public class TimeUtils {
             's', TimeUnit.SECONDS.toMillis(1L)
     );
 
-    /**
-     * Parse a long from a string using the y-M-d-h-m-s format.
-     *
-     * @param string the string to parse from, with support for "permanent" or "lifetime".
-     * @return the time in millis (-1 if no time was parsed, MAX_VALUE if the string was permanent)
-     */
     public static long parseTime(String string) {
-        if(string.contains("perm") || string.equalsIgnoreCase("lifetime")) {
-            return Long.MAX_VALUE;
-        }
+        String input = string.toLowerCase();
+        if(input.contains("perm") || input.equalsIgnoreCase("lifetime") )return Long.MAX_VALUE;
 
-        long result = -1;
-        int startIndex = 0;
-        for(int index = 0; index < string.length(); index++) {
-            char charAt = string.charAt(index);
-            if(!CHARACTERS.containsKey(charAt)) continue;
+        long totalMillis = 0L;
+        int start = 0;
+        boolean found = false;
+
+        for(int index = 0; index < input.length(); index++) {
+            char charAt = input.charAt(index);
+            if(!TIME_UNITS.containsKey(charAt)) continue;
 
             try {
-                String substring = string.substring(startIndex, index);
-                int parsedInt = Integer.parseInt(substring);
-                result += parsedInt * CHARACTERS.get(charAt);
-                startIndex = (index + 1);
+                int value = Integer.parseInt(input.substring(start, index));
+                totalMillis += value * TIME_UNITS.get(charAt);
+                start = index + 1;
+                found = true;
             } catch (Exception ignored) {}
         }
 
-        return result > 0 ? result + 1L : result == 0 ? result : -1;
+        return found ? totalMillis : -1;
     }
 
-    /**
-     * Formats the time in a 1:00:00 format.
-     *
-     * @param time the time in seconds.
-     * @return the formatted string
-     */
     public static String format(int time) {
         int sec = time % 60;
         int min = time / 60 % 60;
-        int h = time / 3600 % 24;
-
-        return (h > 0 ? h + ":" : "") + (min < 10 ? "0" + min : min) + ":" + (sec < 10 ? "0" + sec : sec);
+        int hrs = time / 3600 % 24;
+        return (hrs > 0 ? hrs + ":" : "") + String.format("%02d:%02d", min, sec);
     }
 
-    private static int getDurationCount(long duration, int length, int factor) {
-        if(factor == 0) return (int) (duration / length);
-        return (int) ((duration / length) % factor);
-    }
+    public static String format(long duration, boolean compact) {
+        if (duration == Long.MAX_VALUE) return "Permanent";
+        long seconds = duration / 1000;
+        long mins = seconds / 60; seconds %= 60;
+        long hrs = mins / 60; mins %= 60;
+        long days = hrs / 24; hrs %= 24;
 
-    private static int[] getDurationCounts(long duration) {
-        int seconds = getDurationCount(duration, 1000, 60);
-        int minutes = getDurationCount(duration, 60000, 60);
-        int hours = getDurationCount(duration, 3600000, 24);
-        int days = getDurationCount(duration, 86400000, 0); // Don't want to wrap days since months / years does not exist
-        return new int[] { seconds, minutes, hours, days };
-    }
+        StringBuilder sb = new StringBuilder();
+        if (days > 0) sb.append(days).append(compact ? "d" : days == 1 ? " day" : " days");
+        if (hrs > 0) sb.append(hrs).append(compact ? "h" : hrs == 1 ? " hour" : " hours");
+        if (mins > 0) sb.append(mins).append(compact ? "m" : mins == 1 ? " minute" : " minutes");
+        if (seconds > 0) sb.append(seconds).append(compact ? "s" : seconds == 1 ? " second" : " seconds");
 
-    private static String formatDurationWord(int type, int count, boolean compact) {
-        String typeName = switch (type) {
-            case 0 -> (compact ? "d" : " day" + (count != 1 ? "s" : ""));
-            case 1 -> (compact ? "h" : " hour" + (count != 1 ? "s" : ""));
-            case 2 -> (compact ? "m" : " minute" + (count != 1 ? "s" : ""));
-            case 3 -> (compact ? "s" : " second" + (count != 1 ? "s" : ""));
-            default -> "";
-        };
-
-        return count + typeName;
+        return !sb.isEmpty() ? sb.toString() : "0s";
     }
 
     public static String format(long duration) {
         return format(duration, true);
-    }
-
-    public static String format(long duration, boolean compact) {
-        if(duration == Long.MAX_VALUE) return "Permanent";
-
-        final int[] counts = getDurationCounts(duration);
-        final int seconds = counts[0], minutes = counts[1], hours = counts[2], days = counts[3];
-        final StringBuilder builder = new StringBuilder();
-
-        if(days > 0) builder.append(formatDurationWord(0, days, compact));
-        if(hours > 0) builder.append(formatDurationWord(1, hours, compact));
-        if(minutes > 0) builder.append(formatDurationWord(2, minutes, compact));
-        if(seconds > 0) builder.append(formatDurationWord(3, seconds, compact));
-
-        String string = builder.toString();
-        return string.isEmpty() ? "0s" : string;
     }
 }

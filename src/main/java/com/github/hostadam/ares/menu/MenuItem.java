@@ -1,18 +1,29 @@
 package com.github.hostadam.ares.menu;
 
+import com.github.hostadam.ares.data.item.ItemBuilder;
 import com.github.hostadam.ares.data.item.ItemParser;
+import com.github.hostadam.ares.utils.internals.ScheduledForChange;
 import lombok.Getter;
 import lombok.Setter;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Item;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
+@ScheduledForChange(
+        since = "4.1.1",
+        description = """
+                Goal is to make menus fully configurable.
+                The lore and name should use TagResolvers (which can feature conditional logic)
+                """
+)
 @Getter
 public class MenuItem {
 
     @Setter
-    private ItemStack itemStack;
+    private ItemBuilder itemStack;
     private ItemStack fallbackItem;
 
     private char menuChar = 0;
@@ -20,12 +31,14 @@ public class MenuItem {
     private Type type = Type.NORMAL;
     private MenuItemClickHandler clickHandler;
 
-    public MenuItem(ItemStack itemStack) {
-        this.itemStack = (itemStack == null ? new ItemStack(Material.AIR) : itemStack);
+    private TagResolver resolver;
+
+    public MenuItem(ItemBuilder builder) {
+        this.itemStack = (builder == null ? new ItemBuilder(Material.AIR) : builder);
     }
 
     public MenuItem(ConfigurationSection section) {
-        this.itemStack = ItemParser.parse(section.getConfigurationSection("item")).build();
+        this.itemStack = ItemParser.parse(section.getConfigurationSection("item"));
         this.permission = section.getString("permission", "");
         this.type = Type.valueOf(section.getString("type", "NORMAL"));
 
@@ -38,13 +51,18 @@ public class MenuItem {
         }
     }
 
+    public MenuItem tagResolver(TagResolver... resolvers) {
+        this.resolver = TagResolver.resolver(resolvers);
+        return this;
+    }
+
     public boolean hasAssignedChar() {
         return this.menuChar != 0;
     }
 
     public ItemStack buildItem(Menu<?> menu) {
         if(this.checkIfFallback(menu)) return this.fallbackItem.clone();
-        return itemStack.clone();
+        return resolver != null ? itemStack.buildWithResolvers(resolver) : itemStack.build();
     }
 
     public MenuItem permission(String permission) {

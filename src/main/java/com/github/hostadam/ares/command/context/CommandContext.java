@@ -31,7 +31,6 @@ public class CommandContext {
     private <T> T getArgument(int index, T defaultValue) {
         if(index == -1 || index >= arguments.length) return defaultValue;
         Class<?> clazz = defaultValue.getClass();
-
         if(clazz == String.class && index == this.command.getExpectedParameters().size() - 1) {
             String joined = String.join(" ", Arrays.copyOfRange(arguments, index, arguments.length));
             return (T) Optional.of(clazz.cast(joined));
@@ -61,25 +60,44 @@ public class CommandContext {
     }
 
     /** Public methods **/
+
+    // Used to fetch an argument that may not be present, and if it isn't, it will still proceed.
     public <T> Optional<T> getArgument(String parameterName, Class<T> type) {
         int index = this.command.getIndexOf(parameterName);
         return this.getArgument(index, type);
     }
 
+    // Used to fetch an argument that may not be present, and if not, it will send an error message.
+    public <T> Optional<T> getArgument(String parameterName, Class<T> type, Component errorMessage) {
+        int index = this.command.getIndexOf(parameterName);
+        if(index == -1 || index >= this.arguments.length) return Optional.empty();
+
+        Optional<T> optional = getArgument(index, type);
+        if(optional.isEmpty()) {
+            this.response(errorMessage);
+            throw new CommandExecutionException();
+        }
+
+        return optional;
+    }
+
+    // Used to fetch an argument directly with a provided default value as fallback
     public <T> T getArgument(String parameterName, T defaultValue) {
         int index = this.command.getIndexOf(parameterName);
         return this.getArgument(index, defaultValue);
     }
 
-    public <T> T getArgument(String parameterName, Class<T> type, Component errorMessage) {
-        int index = this.command.getIndexOf(parameterName);
-        return this.getArgument(index, type, errorMessage).orElseThrow(CommandExecutionException::new);
+    // Used to fetch a required argument with an error message if not present.
+    public <T> T requireArg(String parameterName, Class<T> type, Component errorMessage) {
+        return this.getArgument(parameterName, type, errorMessage).orElseThrow(CommandExecutionException::new);
     }
 
+    // Used to return the name of the sender with a function for player names specifically
     public String senderFormattedName(Function<Player, String> function) {
         return commandSender instanceof Player player ? function.apply(player) : "CONSOLE";
     }
 
+    // Used to get the sender
     public <T extends CommandSender> T sender(Class<T> type, Component error) {
         if(type.isInstance(this.commandSender)) {
             return type.cast(this.commandSender);

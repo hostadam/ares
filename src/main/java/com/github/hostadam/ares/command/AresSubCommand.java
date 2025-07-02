@@ -7,8 +7,9 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface AresCommand {
+public @interface AresSubCommand {
 
+    String parent() default "";
     String[] labels();
     String description();
     String usage() default "";

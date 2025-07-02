@@ -135,7 +135,7 @@ public abstract class Menu<T extends JavaPlugin> {
                 button.handlePagedClick(this);
             } else if(button.getClickHandler() != null) {
                 button.getClickHandler().handle(event, button);
-                event.setCurrentItem(button.getItemStack());
+                event.setCurrentItem(button.buildItem(this));
             }
         }
     }

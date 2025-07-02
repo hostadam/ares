@@ -76,6 +76,10 @@ public class ItemParser {
         }
 
         if(section.contains("displayName")) {
+            builder.name(PaperUtils.formatMiniMessage(section.getString("displayName")));
+        }
+
+        if(section.contains("resolvingDisplayName")) {
             builder.name(section.getString("displayName"));
         }
 
@@ -92,6 +96,13 @@ public class ItemParser {
             List<Component> lore = section.getStringList("lore")
                     .stream()
                     .map(PaperUtils::formatMiniMessage)
+                    .toList();
+            builder.loreList(lore);
+        }
+
+        if(section.contains("resolvingLore")) {
+            List<String> lore = section.getStringList("lore")
+                    .stream()
                     .toList();
             builder.lore(lore);
         }

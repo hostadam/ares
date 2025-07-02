@@ -1,35 +1,53 @@
 package com.github.hostadam.ares.board;
 
+import com.github.hostadam.ares.utils.PaperUtils;
+import io.papermc.paper.scoreboard.numbers.NumberFormat;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.inventory.BlastingRecipe;
 import org.bukkit.scoreboard.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Getter
 public class BoardObjective {
 
+    private static final String[] COLOR_CODES = Arrays
+            .stream(ChatColor.values())
+            .map(Object::toString)
+            .toArray(String[]::new);
+    private static final NumberFormat BLANK = NumberFormat.blank();
+
     private final Scoreboard scoreboard;
     private final Objective objective;
+    private final String randomId;
 
     private Component title;
     private Set<String> previousLines;
+    private final List<Component> lines = new ArrayList<>();
     private final Map<String, Team> teams = new HashMap<>();
-    private final Map<Integer, Component> lines = new HashMap<>();
-
-    private boolean shouldUpdateTitle = false, shouldUpdateLines = false;
 
     public BoardObjective(Scoreboard scoreboard) {
         this.scoreboard = scoreboard;
         this.title = Component.text("Loading...");
         this.previousLines = new HashSet<>();
         this.objective = scoreboard.registerNewObjective("buffered", Criteria.DUMMY, this.title);
+        this.randomId = Integer.toHexString(ThreadLocalRandom.current().nextInt());
+    }
+
+    public boolean isVisible() {
+        return this.objective.getDisplaySlot() == DisplaySlot.SIDEBAR;
     }
 
     public void setVisible(boolean visible) {
@@ -40,84 +58,74 @@ public class BoardObjective {
         }
     }
 
-    public void updateTitle(Component newTitle) {
-        Component newTitle = legacySerializer.deserialize(newTitleLegacy);
-        if (!this.title.equals(newTitle)) {
-            this.title = newTitle;
-            this.shouldUpdateTitle = true;
-        }
-    }
+    private boolean updateLines(@NotNull List<Component> newLines) {
+        final int oldLineSize = this.lines.size();
+        final int newLineSize = newLines.size();
 
-    public void updateLine(int lineNumber, String line) {
-        String currentLine = this.lines.get(lineNumber);
-        if(!line.equals(currentLine)) {
-            this.lines.put(lineNumber, line);
-            this.shouldUpdateLines = true;
-        }
-    }
-
-    private String[] getPrefixAndSuffix(String text) {
-        String translated = ChatColor.translateAlternateColorCodes('&', text);
-        if(translated.length() <= 64) {
-            return new String[] { translated, "" };
-        }
-
-        int splitAt = text.charAt(63) == ChatColor.COLOR_CHAR ? 63 : 64;
-        String prefix = translated.substring(0, splitAt);
-        String suffix = ChatColor.getLastColors(prefix) + translated.substring(splitAt);
-        suffix = suffix.length() > 64 ? suffix.substring(0, 64) : suffix;
-        return new String[] { prefix, suffix };
-    }
-
-    public void updateLines(List<String> newLines) {
-        if(newLines.size() != this.lines.size() || !this.lines.values().equals(newLines)) {
+        // Early return if lines are empty.
+        if(newLineSize == 0 && oldLineSize != 0) {
             this.lines.clear();
+            return true;
+        }
 
-            if(newLines.isEmpty()) {
-                this.shouldUpdateLines = true;
-                return;
+        boolean changed = newLineSize != oldLineSize ||
+                IntStream.range(0, newLines.size())
+                        .anyMatch(i -> !Objects.equals(this.lines.get(i), newLines.get(i)));
+
+        if(!changed) return false;
+        this.lines.clear();
+        this.lines.addAll(newLines);
+        return true;
+    }
+
+    public void applyChanges(Component title, List<Component> computedLines, BoardSettings settings) {
+        if(!Objects.equals(this.title, title)) {
+            this.title = title;
+            this.objective.displayName(title);
+        }
+
+        boolean needsUpdate = this.updateLines(computedLines);
+        if(needsUpdate) {
+            Set<String> currentEntries = new HashSet<>();
+
+            for(int index = 0; index < this.lines.size(); index++) {
+                String entry = this.createEntryName(index);
+                currentEntries.add(entry);
+
+                String bukkitTeamName = "team_" + this.randomId + "_" + index;
+                Team team = this.teams.computeIfAbsent(entry, k -> scoreboard.registerNewTeam(bukkitTeamName));
+                if(!team.hasEntry(entry)) {
+                    team.addEntry(entry);
+                }
+
+                team.prefix(this.lines.get(index));
+
+                Score score = this.objective.getScore(entry);
+                score.setScore(this.lines.size() - index);
+                score.numberFormat(settings.getScoreFormat());
             }
 
-            int totalLines = Math.min(64, newLines.size());
-            for(int i = 0; i < totalLines; i++) {
-                this.updateLine(totalLines - i, newLines.get(i));
+            this.previousLines.removeAll(currentEntries);
+            for (String oldEntry : this.previousLines) {
+                this.scoreboard.resetScores(oldEntry);
+
+                Team oldTeam = this.teams.remove(oldEntry);
+                if (oldTeam != null) {
+                    oldTeam.removeEntry(oldEntry);
+                    oldTeam.unregister();
+                }
             }
+
+            this.previousLines = currentEntries;
         }
     }
 
-    public void update() {
-        if(shouldUpdateTitle) {
-            this.objective.setDisplayName(this.title);
-            this.shouldUpdateTitle = false;
-        }
+    private String createEntryName(int index) {
+        final int colorCodes = COLOR_CODES.length;
+        if(index < colorCodes) return COLOR_CODES[index];
 
-        if(shouldUpdateLines) {
-            Set<String> newLines = new HashSet<>();
-
-            this.lines.forEach((index, line) -> {
-                String name = "§" + ChatColor.values()[index].getChar();
-                String[] text = this.getPrefixAndSuffix(line);
-
-                Team team = this.teams.computeIfAbsent(name, scoreboard::registerNewTeam);
-                team.setPrefix(text[0]);
-                team.setSuffix(text[1]);
-
-                if(!team.hasEntry(name)) team.addEntry(name);
-                objective.getScore(name).setScore(index);
-
-                newLines.add(name);
-            });
-
-            this.previousLines.forEach(previousLine -> {
-                if(!newLines.contains(previousLine)) {
-                    Team team = scoreboard.getTeam(previousLine);
-                    if(team != null) team.removeEntry(previousLine);
-                    scoreboard.resetScores(previousLine);
-                }
-            });
-
-            this.previousLines = newLines;
-            this.shouldUpdateLines = false;
-        }
+        int colorIndex = index % COLOR_CODES.length;
+        int repeatCount = 1 + (index / COLOR_CODES.length);
+        return String.join("", Collections.nCopies(repeatCount, COLOR_CODES[colorIndex]));
     }
 }

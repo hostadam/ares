@@ -1,6 +1,7 @@
 package com.github.hostadam.ares.command.handler;
 
 import com.github.hostadam.ares.command.AresCommand;
+import com.github.hostadam.ares.command.AresSubCommand;
 import com.github.hostadam.ares.command.context.CommandContext;
 import com.github.hostadam.ares.command.context.CommandContextHelper;
 import com.github.hostadam.ares.command.tabcompletion.ParameterTabCompleter;
@@ -12,11 +13,9 @@ import org.bukkit.command.CommandMap;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 
 public class CommandHandler {
 
@@ -49,33 +48,34 @@ public class CommandHandler {
     public void register(Object object) {
         if(this.commandMap == null) return;
         for(Method method : object.getClass().getDeclaredMethods()) {
-            if(!method.isAnnotationPresent(AresCommand.class)
-                    || method.getParameterCount() != 1
-                    || !CommandContext.class.isAssignableFrom(method.getParameters()[0].getType())) {
-                continue;
-            }
+            // Ignore if no command ctx
+            if(method.getParameterCount() != 1 || !CommandContext.class.isAssignableFrom(method.getParameters()[0].getType())) continue;
 
-            AresCommand command = method.getAnnotation(AresCommand.class);
-            AresCommandData data = new AresCommandData(command, method, object);
-            String name = command.labels()[0], parent = command.parent();
+            if(method.isAnnotationPresent(AresCommand.class)) {
+                AresCommand command = method.getAnnotation(AresCommand.class);
+                AresCommandData data = new AresCommandData(command.labels(), command.description(), command.usage(), command.permission(), method, object);
 
-            if(parent.isEmpty()) {
-                AresCommandImpl impl = new AresCommandImpl(this, data);
-                this.commands.put(name, impl);
+                AresCommandImpl implementation = new AresCommandImpl(this, data);
+                String name = implementation.getName();
 
-                if(this.subCommandQueue.containsKey(name)) {
-                    this.subCommandQueue.get(name).forEach(impl::addSubCommand);
-                }
+                this.commands.put(name, implementation);
+                this.commandMap.register(name, implementation);
 
-                this.commandMap.register(name, impl);
-            } else if(!this.commands.containsKey(parent)) {
-                List<AresCommandData> subCommands = this.subCommandQueue.computeIfAbsent(parent, string -> new ArrayList<>());
-                subCommands.add(data);
-                this.subCommandQueue.put(parent, subCommands);
-            } else {
-                AresCommandImpl parentCommand = this.getCommandByLabel(parent);
-                if(parentCommand != null) {
-                    parentCommand.addSubCommand(data);
+                this.subCommandQueue.computeIfPresent(name, (key, queue) -> {
+                    queue.forEach(implementation::addSubCommand);
+                    return null;
+                });
+            } else if(method.isAnnotationPresent(AresSubCommand.class)) {
+                AresSubCommand command = method.getAnnotation(AresSubCommand.class);
+                AresCommandData data = new AresCommandData(command.labels(), command.description(), command.usage(), command.permission(), method, object);
+                String parent = command.parent();
+                if(!this.commands.containsKey(parent)) {
+                    this.subCommandQueue.computeIfAbsent(parent, string -> new ArrayList<>()).add(data);
+                } else {
+                    AresCommandImpl parentCommand = this.getCommandByLabel(parent);
+                    if(parentCommand != null) {
+                        parentCommand.addSubCommand(data);
+                    }
                 }
             }
         }
