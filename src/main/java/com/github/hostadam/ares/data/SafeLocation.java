@@ -8,6 +8,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.NumberConversions;
 
 import java.util.Map;

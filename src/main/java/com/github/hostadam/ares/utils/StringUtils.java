@@ -1,6 +1,8 @@
 package com.github.hostadam.ares.utils;
 
 import com.google.common.primitives.Ints;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.md_5.bungee.api.ChatColor;
 
 import java.awt.image.BufferedImage;
@@ -17,39 +19,6 @@ public class StringUtils {
     private static final Pattern HEX_PATTERN = Pattern.compile("&#[a-fA-F0-9]{6}");
     private static final Pattern ALPHANUMERIC_PATTERN = Pattern.compile("\\p{Alnum}+");
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.#");
-
-
-    /**
-     * Convert a packed RGB value to a hex string
-     *
-     * @param rgb the rgb to convert
-     * @return the color as hex
-     */
-    public static String hexFromRGB(int rgb) {
-        rgb = rgb & 0xFFFFFF;
-
-        final int r = (rgb >> 16) & 0xFF;
-        final int g = (rgb >> 8) & 0xFF;
-        final int b = rgb & 0xFF;
-        return String.format("#%02X%02X%02X", r, g, b);
-    }
-
-    /**
-     * Format a message with hex colors
-     *
-     * @param message the message to format
-     * @return the message formatted with hex colors
-     */
-    public static String formatHex(String message) {
-        Matcher match = HEX_PATTERN.matcher(message);
-        while(match.find()) {
-            String color = message.substring(match.start(), match.end());
-            message = message.replace(color, ChatColor.of(color.substring(1)).toString());
-            match = HEX_PATTERN.matcher(message);
-        }
-
-        return ChatColor.translateAlternateColorCodes('&', message);
-    }
 
     public static String formatBigNumeric(double value) {
         if(value >= 1000000000) {

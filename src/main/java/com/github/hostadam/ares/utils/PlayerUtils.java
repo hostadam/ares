@@ -45,50 +45,6 @@ public class PlayerUtils {
     }
 
     /**
-     * Fetch an 8-pixel avatar of the player's name.
-     *
-     * @param playerName the name of the player
-     * @return the image
-     */
-    public static CompletableFuture<BufferedImage> fetchHeadImage(String playerName) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                URL url = new URL("https://minotar.net/avatar/" + playerName + "/8.png");
-                return ImageIO.read(url);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
-
-    public static CompletableFuture<String[]> buildPlayerHead(String playerName, String[] message) {
-        return fetchHeadImage(playerName)
-                .thenApply(image -> {
-                    if(message.length != image.getHeight()) {
-                        throw new RuntimeException("Message length must be the same as the image.");
-                    }
-
-                    final int height = image.getHeight(), width = image.getWidth();
-                    final String[] result = new String[height];
-
-                    for(int h = 0; h < height; h++) {
-                        StringBuilder builder = new StringBuilder();
-                        for(int w = 0; w < width; w++) {
-                            int rgb = image.getRGB(h, w);
-                            String hexColor = StringUtils.hexFromRGB(rgb);
-                            builder.append("&").append(hexColor).append(StringUtils.BOX);
-                        }
-
-                        builder.append("&r ").append(message[h]);
-                        result[h] = StringUtils.formatHex(builder.toString());
-                    }
-
-                    return result;
-                }
-        );
-    }
-
-    /**
      * Get the offline player from a name. A new offline player instance is created when using the Bukkit method.
      * Therefore, we return the offline player as null if they have never been on the server before.
      *
@@ -96,16 +52,11 @@ public class PlayerUtils {
      * @return the offline player
      */
     public static OfflinePlayer getOfflinePlayer(String name) {
-        OfflinePlayer player = Bukkit.getOfflinePlayer(name);
-        if(!player.hasPlayedBefore() && !player.isOnline()) {
-            return null;
-        }
-
-        return player;
+        return Bukkit.getOfflinePlayerIfCached(name);
     }
 
     /**
-     * Get the offline player from a uuid. A new offline player instance is created when using the Bukkit method.
+     * Get the offline player from an uuid. A new offline player instance is created when using the Bukkit method.
      * Therefore, we return the offline player as null if they have never been on the server before.
      *
      * @param uniqueId the uuid of the player

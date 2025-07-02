@@ -1,27 +1,33 @@
 package com.github.hostadam.ares.data.item;
 
-import com.github.hostadam.ares.utils.StringUtils;
+import com.github.hostadam.ares.utils.PaperUtils;
+import io.papermc.paper.datacomponent.DataComponentType;
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.*;
+import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
+import io.papermc.paper.registry.keys.SoundEventKeys;
+import io.papermc.paper.registry.set.RegistryKeySet;
+import io.papermc.paper.registry.set.RegistrySet;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.serialization.ConfigurationSerialization;
-import org.bukkit.damage.DamageType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemRarity;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.components.*;
-import org.bukkit.inventory.meta.components.consumable.ConsumableComponent;
-import org.bukkit.inventory.meta.components.consumable.effects.ConsumableApplyEffects;
-import org.bukkit.inventory.meta.components.consumable.effects.ConsumableEffect;
-import org.bukkit.tag.DamageTypeTags;
-import org.w3c.dom.Attr;
+import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
+@SuppressWarnings({"UnstableApiUsage"})
 public class ItemParser {
 
     public static ItemBuilder parse(ConfigurationSection section) {
@@ -70,7 +76,7 @@ public class ItemParser {
         }
 
         if(section.contains("displayName")) {
-            builder.name(StringUtils.formatHex(section.getString("displayName")));
+            builder.name(section.getString("displayName"));
         }
 
         if(section.contains("enchantments")) {
@@ -83,94 +89,85 @@ public class ItemParser {
         }
 
         if(section.contains("lore")) {
-            List<String> lore = section.getStringList("lore")
+            List<Component> lore = section.getStringList("lore")
                     .stream()
-                    .map(StringUtils::formatHex)
+                    .map(PaperUtils::formatMiniMessage)
                     .toList();
             builder.lore(lore);
         }
 
-        // TODO: https://github.com/oraxen/oraxen/blob/master/core/src/main/java/io/th0rgal/oraxen/items/ItemParser.java
-
         /* 1.19+ functionality */
-        ItemMeta itemMeta = builder.fetchCurrentMeta();
-        parseModernComponents(itemMeta, section);
+        ItemStack itemStack = builder.fetchCurrentItem();
+        parseModernComponents(itemStack, section);
 
         if(section.contains("attributes")) {
             ConfigurationSection attributesSection = section.getConfigurationSection("attributes");
-            parseAttributes(itemMeta, attributesSection);
+            if(attributesSection != null) {
+                parseAttributes(itemStack, attributesSection);
+            }
         }
 
         if(section.contains("components")) {
-            ConfigurationSection blocksAttackComponentSection = section.getConfigurationSection("blocksattack");
-            if(blocksAttackComponentSection != null) {
-                parseBlocksAttackComponent(itemMeta, blocksAttackComponentSection);
+            ConfigurationSection jukeboxPlayableSection = section.getConfigurationSection("jukebox");
+            if(jukeboxPlayableSection != null) {
+                parseJukeboxPlayableComponent(itemStack, jukeboxPlayableSection);
             }
 
-            ConfigurationSection jukeboxPlayableComponentSection = section.getConfigurationSection("jukebox");
-            if(jukeboxPlayableComponentSection != null) {
-                parseJukeboxPlayableComponent(itemMeta, jukeboxPlayableComponentSection);
+            ConfigurationSection customModelDataSection = section.getConfigurationSection("custom-model-data");
+            if(customModelDataSection != null) {
+                parseCustomModelDataComponent(itemStack, customModelDataSection);
             }
 
-            ConfigurationSection customModelDataComponentSection = section.getConfigurationSection("custom-model-data");
-            if(customModelDataComponentSection != null) {
-                parseCustomModelDataComponent(itemMeta, customModelDataComponentSection);
+            ConfigurationSection weaponSection = section.getConfigurationSection("weapon");
+            if(weaponSection != null) {
+                parseWeaponComponent(itemStack, weaponSection);
             }
 
-            ConfigurationSection toolComponentSection = section.getConfigurationSection("tool");
-            if(toolComponentSection != null) {
-                parseToolComponent(itemMeta, toolComponentSection);
+            ConfigurationSection foodSection = section.getConfigurationSection("food");
+            if(foodSection != null) {
+                parseFoodComponent(itemStack, foodSection);
             }
 
-            ConfigurationSection weaponComponentSection = section.getConfigurationSection("weapon");
-            if(weaponComponentSection != null) {
-                parseWeaponComponent(itemMeta, weaponComponentSection);
+            ConfigurationSection consumableSection = section.getConfigurationSection("consumable");
+            if(consumableSection != null) {
+                parseConsumableComponent(itemStack, consumableSection);
             }
 
-            ConfigurationSection foodComponentSection = section.getConfigurationSection("food");
-            if(foodComponentSection != null) {
-                parseFoodComponent(itemMeta, foodComponentSection);
+            ConfigurationSection toolSection = section.getConfigurationSection("tool");
+            if(toolSection != null) {
+                parseToolComponent(itemStack, toolSection);
             }
 
-            ConfigurationSection consumableComponentSection = section.getConfigurationSection("consumable");
-            if(consumableComponentSection != null) {
-                parseConsumableComponent(itemMeta, consumableComponentSection);
-            }
-
-            ConfigurationSection equippableComponentSection = section.getConfigurationSection("equippable");
-            if(equippableComponentSection != null) {
-                parseEquippableComponent(itemMeta, equippableComponentSection);
+            ConfigurationSection equippableSection = section.getConfigurationSection("equippable");
+            if(equippableSection != null) {
+                parseEquippableComponent(itemStack, equippableSection);
             }
         }
 
         return builder;
     }
 
-    private static void parseModernComponents(ItemMeta meta, ConfigurationSection section) {
-        meta.setItemName(section.getString("item-name", meta.getItemName()));
-        meta.setGlider(section.getBoolean("glider", meta.isGlider()));
+    private static void parseModernComponents(ItemStack itemStack, ConfigurationSection section) {
+        set(itemStack, DataComponentTypes.ITEM_NAME, PaperUtils.fromConfig(section, "item-name"));
+        set(itemStack, DataComponentTypes.GLIDER, section.getBoolean("glider"));
+        set(itemStack, DataComponentTypes.TOOLTIP_STYLE, PaperUtils.key(section.getString("tooltip-style")).orElse(null));
+        set(itemStack, DataComponentTypes.ITEM_MODEL, PaperUtils.key(section.getString("item-model")).orElse(null));
 
-        if(section.contains("tooltip-style")) {
-            meta.setTooltipStyle(NamespacedKey.fromString(section.getString("tooltip-style")));
-        }
-
-        if(section.contains("item-model")) {
-            NamespacedKey key = NamespacedKey.fromString(section.getString("item-model"));
-            if(key != null) meta.setItemModel(key);
-        }
-
-        if(section.contains("damage-resistant")) {
-            for(String string : section.getStringList("damage-resistant")) {
+        //TODO: Damage resistant
+        /*
+        for(String string : section.getStringList("damage-resistant")) {
                 NamespacedKey key = NamespacedKey.fromString(string);
                 if(key == null) continue;
                 Tag<DamageType> tag = Bukkit.getTag(DamageTypeTags.REGISTRY_DAMAGE_TYPES, key, DamageType.class);
                 if(tag == null) continue;
                 meta.setDamageResistant(tag);
             }
-        }
+         */
     }
 
-    private static void parseAttributes(ItemMeta meta, ConfigurationSection section) {
+    private static void parseAttributes(ItemStack itemStack, ConfigurationSection section) {
+        ItemAttributeModifiers.Builder modifiers = ItemAttributeModifiers.itemAttributes();
+
         for(String key : section.getKeys(false)) {
             NamespacedKey namespacedKey = NamespacedKey.fromString(key);
             if(namespacedKey == null) continue;
@@ -178,93 +175,82 @@ public class ItemParser {
             if(attribute == null) continue;
             ConfigurationSection attributeSection = section.getConfigurationSection(key);
             AttributeModifier modifier = AttributeModifier.deserialize(attributeSection.getValues(false));
-
-            meta.addAttributeModifier(attribute, modifier);
+            modifiers.addModifier(attribute, modifier);
         }
+
+        itemStack.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, modifiers);
     }
 
     @SuppressWarnings({ "UnstableApiUsage"})
-    private static void parseJukeboxPlayableComponent(ItemMeta meta, ConfigurationSection section) {
-        if(!meta.hasJukeboxPlayable()) return; // TODO: can be null?
-        JukeboxPlayableComponent component = meta.getJukeboxPlayable();
-        NamespacedKey songKey = NamespacedKey.fromString(section.getString("song-key"));
-        if(songKey == null) return;
-        component.setSongKey(songKey);
-        meta.setJukeboxPlayable(component);
+    private static void parseJukeboxPlayableComponent(ItemStack itemStack, ConfigurationSection section) {
+        Optional<Key> optional = PaperUtils.key(section.getString("song-key"));
+        optional.ifPresent(key -> {
+            JukeboxSong song = RegistryAccess.registryAccess().getRegistry(RegistryKey.JUKEBOX_SONG).get(key);
+            if(song == null) return;
+            set(itemStack, DataComponentTypes.JUKEBOX_PLAYABLE, JukeboxPlayable.jukeboxPlayable(song).build());
+        });
     }
 
     @SuppressWarnings({ "UnstableApiUsage"})
-    private static void parseCustomModelDataComponent(ItemMeta meta, ConfigurationSection section) {
-        CustomModelDataComponent component = meta.getCustomModelDataComponent();
-
-        component.setStrings(section.contains("strings") ? section.getStringList("strings") : List.of());
-        component.setFloats(section.contains("floats") ? section.getFloatList("floats") : List.of());
-        component.setFlags(section.contains("flags") ? section.getBooleanList("flags") : List.of());
+    private static void parseCustomModelDataComponent(ItemStack itemStack, ConfigurationSection section) {
+        CustomModelData.Builder builder = CustomModelData.customModelData()
+                .addStrings(section.getStringList("strings"))
+                .addFloats(section.getFloatList("floats"))
+                .addFlags(section.getBooleanList("flags"));
 
         if(section.contains("colors")) {
-            List<Color> colors = new ArrayList<>();
             ConfigurationSection colorSection = section.getConfigurationSection("colors");
             for(String key : colorSection.getKeys(false)) {
                 try {
                     Color color = Color.deserialize(colorSection.getConfigurationSection(key).getValues(false));
-                    colors.add(color);
-                } catch (RuntimeException e) {
-                    throw new RuntimeException(e);
-                }
+                    builder.addColor(color);
+                } catch (RuntimeException ignored) { }
             }
-
-            component.setColors(colors);
         }
 
-        meta.setCustomModelDataComponent(component);
+        itemStack.setData(DataComponentTypes.CUSTOM_MODEL_DATA, builder.build());
+    }
+
+    private static void parseWeaponComponent(ItemStack itemStack, ConfigurationSection section) {
+        Weapon weapon = itemStack.getData(DataComponentTypes.WEAPON);
+        itemStack.setData(DataComponentTypes.WEAPON, Weapon.weapon()
+                .disableBlockingForSeconds((float) section.getDouble("disable-blocking-for-seconds", weapon != null ? weapon.disableBlockingForSeconds() : 0.0d))
+                .itemDamagePerAttack(section.getInt("damage-per-attack", weapon != null ? weapon.itemDamagePerAttack() : 0))
+                .build()
+        );
     }
 
     @SuppressWarnings({ "UnstableApiUsage"})
-    private static void parseBlocksAttackComponent(ItemMeta meta, ConfigurationSection section) {
-        BlocksAttacksComponent component = meta.getBlocksAttacks();
-
-        //TODO: This
-        meta.setBlocksAttacks(component);
+    private static void parseFoodComponent(ItemStack itemStack, ConfigurationSection section) {
+        FoodProperties food = itemStack.getData(DataComponentTypes.FOOD);
+        itemStack.setData(DataComponentTypes.FOOD, FoodProperties.food()
+                .nutrition(section.getInt("nutrition", food != null ? food.nutrition() : 0))
+                .saturation((float) section.getDouble("saturation", food != null ? food.saturation() : 0.0d))
+                .canAlwaysEat(section.getBoolean("can-always-eat", food != null && food.canAlwaysEat()))
+                .build()
+        );
     }
 
     @SuppressWarnings({ "UnstableApiUsage"})
-    private static void parseWeaponComponent(ItemMeta meta, ConfigurationSection section) {
-        WeaponComponent component = meta.getWeapon();
-        component.setItemDamagePerAttack(Math.max(section.getInt("damage-per-attack", component.getItemDamagePerAttack()), 0));
-        component.setDisableBlockingForSeconds((float) Math.max(section.getDouble("disable-blocking-for-seconds", component.getDisableBlockingForSeconds()), 0f));
-        meta.setWeapon(component);
-    }
-
-    @SuppressWarnings({ "UnstableApiUsage"})
-    private static void parseFoodComponent(ItemMeta meta, ConfigurationSection section) {
-        FoodComponent component = meta.getFood();
-        component.setNutrition(Math.max(section.getInt("nutrition", component.getNutrition()), 0));
-        component.setCanAlwaysEat(section.getBoolean("can-always-eat", component.canAlwaysEat()));
-        component.setSaturation((float) Math.max(section.getDouble("saturation", component.getSaturation()), 0.0f));
-        meta.setFood(component);
-    }
-
-    @SuppressWarnings({ "UnstableApiUsage"})
-    private static void parseConsumableComponent(ItemMeta meta, ConfigurationSection section) {
-        ConsumableComponent component = meta.getConsumable();
-        component.setAnimation(ConsumableComponent.Animation.valueOf(section.getString("animation", "EAT")));
-        component.setConsumeParticles(section.getBoolean("consume-particles", component.hasConsumeParticles()));
-        component.setConsumeSeconds((float) Math.max(section.getDouble("consume-seconds", component.getConsumeSeconds()), 0.0f));
-
-        if(section.contains("sound")) {
-            NamespacedKey key = NamespacedKey.fromString(section.getString("sound"));
-            component.setSound(key == null ? component.getSound() : Registry.SOUNDS.get(key));
-        }
+    private static void parseConsumableComponent(ItemStack itemStack, ConfigurationSection section) {
+        Consumable consumable = itemStack.getData(DataComponentTypes.CONSUMABLE);
+        itemStack.setData(DataComponentTypes.CONSUMABLE, Consumable.consumable()
+                .animation(ItemUseAnimation.valueOf(section.getString("animation", "EAT")))
+                .consumeSeconds((float) section.getDouble("consume-seconds", consumable != null ? consumable.consumeSeconds() : 0.0d))
+                .hasConsumeParticles(section.getBoolean("has-consume-particles", consumable != null && consumable.hasConsumeParticles()))
+                .sound(PaperUtils.key(section.getString("key")).orElse(SoundEventKeys.ENTITY_GENERIC_EAT))
+                .build()
+        );
 
         //TODO: Effects
     }
 
     @SuppressWarnings({ "UnstableApiUsage"})
-    private static void parseToolComponent(ItemMeta meta, ConfigurationSection section) {
-        ToolComponent component = meta.getTool();
-        component.setDamagePerBlock(Math.max(section.getInt("damage-per-block", component.getDamagePerBlock()), 0));
-        component.setDefaultMiningSpeed((float) Math.max(section.getDouble("mining-speed", component.getDefaultMiningSpeed()), 0f));
-        component.setCanDestroyBlocksInCreative(section.getBoolean("can-destroy-blocks-in-creative", component.canDestroyBlocksInCreative()));
+    private static void parseToolComponent(ItemStack itemStack, ConfigurationSection section) {
+        Tool tool = itemStack.getData(DataComponentTypes.TOOL);
+        Tool.Builder builder = Tool.tool()
+                .damagePerBlock(section.getInt("damage-per-block", tool != null ? tool.damagePerBlock() : 0))
+                .defaultMiningSpeed((float) section.getDouble("default-mining-speed", tool != null ? tool.defaultMiningSpeed() : 0.0d));
 
         if(section.contains("rules")) {
             ConfigurationSection ruleSection = section.getConfigurationSection("rules");
@@ -273,38 +259,55 @@ public class ItemParser {
                 if(material == null) continue;
                 float speed = (float) ruleSection.getDouble(materialName + ".speed", 1.0f);
                 boolean correctForDrops = ruleSection.getBoolean(materialName + ".correct-for-drops");
-                component.addRule(material, speed, correctForDrops);
+                //TODO: Add rule
             }
         }
 
-        meta.setTool(component);
+        itemStack.setData(DataComponentTypes.TOOL, builder.build());
     }
 
     @SuppressWarnings({ "UnstableApiUsage"})
-    private static void parseEquippableComponent(ItemMeta meta, ConfigurationSection section) {
-        EquippableComponent component = meta.getEquippable();
-        component.setSlot(EquipmentSlot.valueOf(section.getString("slot", "BODY")));
+    private static void parseEquippableComponent(ItemStack itemStack, ConfigurationSection section) {
+        Equippable equippable = itemStack.getData(DataComponentTypes.EQUIPPABLE);
+        Equippable.Builder builder = Equippable.equippable(EquipmentSlot.valueOf(section.getString("slot", "HAND")))
+                .dispensable(section.getBoolean("dispensable", equippable != null && equippable.dispensable()))
+                .damageOnHurt(section.getBoolean("damage-on-hurt", equippable != null && equippable.damageOnHurt()))
+                .swappable(section.getBoolean("swappable", equippable != null && equippable.swappable()))
+                .canBeSheared(section.getBoolean("can-be-sheared", equippable != null && equippable.canBeSheared()))
+                .equipOnInteract(section.getBoolean("equip-on-interact", equippable != null && equippable.equipOnInteract()))
+                .assetId(PaperUtils.key(section.getString("asset-id")).orElse(equippable != null ? equippable.equipSound() : null))
+                .cameraOverlay(PaperUtils.key(section.getString("camera-overlay")).orElse(equippable != null ? equippable.equipSound() : null))
+                .equipSound(PaperUtils.key(section.getString("equip-sound")).orElse(equippable != null ? equippable.equipSound() : SoundEventKeys.ITEM_ARMOR_EQUIP_GENERIC));
 
-        List<EntityType> types = section.getStringList("allowed-entities").stream().map(EntityType::valueOf).toList();
-        component.setAllowedEntities(types.isEmpty() ? null : types);
-        component.setDispensable(section.getBoolean("dispensable", component.isDispensable()));
-        component.setCanBeSheared(section.getBoolean("can-be-sheared", component.isCanBeSheared()));
-        component.setDamageOnHurt(section.getBoolean("damage-on-hurt", component.isDamageOnHurt()));
-        component.setSwappable(section.getBoolean("swappable", component.isSwappable()));
-
-        if(section.contains("equip-sound")) {
-            NamespacedKey key = NamespacedKey.fromString(section.getString("equip-sound"));
-            component.setEquipSound(key == null ? component.getEquipSound() : Registry.SOUNDS.get(key));
+        if(section.contains("allowed-entities")) {
+            RegistryKeySet<EntityType> types = RegistrySet.keySet(RegistryKey.ENTITY_TYPE, section.getStringList("allowed-entities")
+                    .stream().map(PaperUtils::key)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .map(RegistryKey.ENTITY_TYPE::typedKey)
+                    .toList()
+            );
+            builder.allowedEntities(types);
         }
 
-        if(section.contains("model")) {
-            component.setModel(NamespacedKey.fromString(section.getString("model")));
-        }
+        itemStack.setData(DataComponentTypes.EQUIPPABLE, builder.build());
+    }
 
-        if(section.contains("camera-overlay")) {
-            component.setCameraOverlay(NamespacedKey.fromString(section.getString("camera-overlay")));
-        }
+    @SuppressWarnings({ "UnstableApiUsage"})
+    private static void parseBlocksAttackComponent(ItemStack itemStack, ConfigurationSection section) {
+        //TODO: This
+    }
 
-        meta.setEquippable(component);
+    private static <T> void set(ItemStack itemStack, DataComponentType.Valued<T> type, @Nullable T value) {
+        if(value == null) return;
+        itemStack.setData(type, value);
+    }
+
+    private static void set(ItemStack itemStack, DataComponentType.NonValued type, boolean flag) {
+        if(flag) {
+            itemStack.setData(type);
+        } else if(itemStack.hasData(type)) {
+            itemStack.unsetData(type);
+        }
     }
 }

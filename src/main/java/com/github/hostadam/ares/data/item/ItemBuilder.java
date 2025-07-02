@@ -1,14 +1,20 @@
 package com.github.hostadam.ares.data.item;
 
+import com.github.hostadam.ares.utils.PaperUtils;
 import com.github.hostadam.ares.utils.StringUtils;
 import com.google.common.collect.ImmutableMultimap;
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextReplacementConfig;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Item;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ItemBuilder {
@@ -31,51 +37,45 @@ public class ItemBuilder {
     }
 
     public ItemBuilder name(String displayName) {
-        this.itemMeta.setDisplayName("§r" + StringUtils.formatHex(displayName));
+        this.itemMeta.displayName(PaperUtils.formatMiniMessage(displayName));
         return this;
     }
 
-    private List<String> fetchLore() {
-        List<String> loreList = new ArrayList<>();
-        if(this.itemMeta.hasLore()) {
-            loreList = this.itemMeta.getLore();
-        }
-
-        return loreList;
-    }
-
-    public ItemBuilder lore(String... strings) {
-        List<String> lore = this.fetchLore();
-        lore.addAll(List.of(strings));
-        this.itemMeta.setLore(lore);
+    public ItemBuilder name(Component component) {
+        this.itemMeta.displayName(component);
         return this;
     }
 
-    public ItemBuilder lore(String lore) {
-        List<String> loreList = this.fetchLore();
-        loreList.add(lore);
-        this.itemMeta.setLore(loreList);
+    public ItemBuilder lore(Component... components) {
+        List<Component> lore = this.itemMeta.hasLore() ? this.itemMeta.lore() : List.of();
+        lore.addAll(Arrays.asList(components));
+        this.itemMeta.lore(lore);
         return this;
     }
 
-    public ItemBuilder lore(List<String> lore) {
-        this.itemMeta.setLore(lore);
+    public ItemBuilder lore(Component component) {
+        List<Component> lore = this.itemMeta.hasLore() ? this.itemMeta.lore() : List.of();
+        lore.add(component);
+        this.itemMeta.lore(lore);
         return this;
     }
 
-    public ItemBuilder setLore(int position, String lore) {
-        List<String> loreList = this.fetchLore();
-        if(position >= loreList.size()) return this;
-        loreList.set(position, lore);
-        this.itemMeta.setLore(loreList);
+    public ItemBuilder lore(List<Component> lore) {
+        this.itemMeta.lore(lore);
         return this;
     }
 
-    public ItemBuilder addLore(int position, String lore) {
-        List<String> loreList = this.fetchLore();
-        if(position >= loreList.size()) return this;
-        loreList.add(position, lore);
-        this.itemMeta.setLore(loreList);
+    public ItemBuilder setLore(int position, Component component) {
+        List<Component> lore = this.itemMeta.hasLore() ? this.itemMeta.lore() : List.of();
+        lore.set(position, component);
+        this.itemMeta.lore(lore);
+        return this;
+    }
+
+    public ItemBuilder addLore(int position, Component component) {
+        List<Component> lore = this.itemMeta.hasLore() ? this.itemMeta.lore() : List.of();
+        lore.add(position, component);
+        this.itemMeta.lore(lore);
         return this;
     }
 
@@ -162,8 +162,8 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemMeta fetchCurrentMeta() {
-        return this.itemMeta;
+    public ItemStack fetchCurrentItem() {
+        return this.itemStack;
     }
 
     public ItemStack build() {
@@ -173,10 +173,5 @@ public class ItemBuilder {
 
     public static ItemStack create(Material material, String displayName) {
         return new ItemBuilder(material).name(displayName).build();
-    }
-
-    @Deprecated(forRemoval = true, since = "3.2.0")
-    public static ItemBuilder fromConfig(ConfigurationSection section) {
-        return ItemParser.parse(section);
     }
 }

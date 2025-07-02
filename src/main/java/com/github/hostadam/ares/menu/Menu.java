@@ -1,5 +1,6 @@
 package com.github.hostadam.ares.menu;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -33,18 +34,18 @@ public abstract class Menu<T extends JavaPlugin> {
         this.inventory = Bukkit.createInventory(null, this.layout.getSize(), this.layout.getTitle());
     }
 
-    public Menu(T owningPlugin, Player player, InventoryType type, String title) {
+    public Menu(T owningPlugin, Player player, InventoryType type, Component title) {
         this.owningPlugin = owningPlugin;
         this.player = player;
         this.layout = new MenuLayout(title, type);
         this.inventory = Bukkit.createInventory(null, type, title);
     }
 
-    public Menu(T owningPlugin, Player player, String title, String[] template) {
+    public Menu(T owningPlugin, Player player, Component title, String[] template) {
         this(owningPlugin, player, new MenuLayout(title, template));
     }
 
-    public Menu(T owningPlugin, Player player, String title, int size) {
+    public Menu(T owningPlugin, Player player, Component title, int size) {
         this(owningPlugin, player, new MenuLayout(title, size));
     }
 

@@ -1,7 +1,9 @@
 package com.github.hostadam.ares.menu;
 
+import com.github.hostadam.ares.utils.PaperUtils;
 import com.github.hostadam.ares.utils.StringUtils;
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.inventory.InventoryType;
 
@@ -10,20 +12,20 @@ import java.util.*;
 @Getter
 public class MenuLayout {
 
-    private final String title;
+    private final Component title;
     private final Map<String, MenuItem> itemsByName;
 
     private int size = 0;
     private String[] rows;
 
-    public MenuLayout(String title, String[] rows) {
+    public MenuLayout(Component title, String[] rows) {
         this.title = title;
         this.rows = rows;
         this.itemsByName = new HashMap<>();
         this.size = rows.length * 9;
     }
 
-    public MenuLayout(String title, int size) {
+    public MenuLayout(Component title, int size) {
         this.title = title;
         this.size = size;
         this.itemsByName = new HashMap<>();
@@ -33,7 +35,7 @@ public class MenuLayout {
         Arrays.fill(this.rows, " ".repeat(rows == 1 ? size : 9));
     }
 
-    public MenuLayout(String title, InventoryType type) {
+    public MenuLayout(Component title, InventoryType type) {
         this(title, type.getDefaultSize());
     }
 
@@ -45,7 +47,7 @@ public class MenuLayout {
 
     public MenuLayout(ConfigurationSection section) {
         if(section == null) throw new IllegalArgumentException("Configuration section is null for menu template");
-        this.title = StringUtils.formatHex(section.getString("title", "Inventory"));
+        this.title = PaperUtils.formatMiniMessage(section.getString("title", "Inventory"));
         this.itemsByName = new HashMap<>();
 
         if(section.contains("type")) {
