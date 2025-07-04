@@ -9,6 +9,7 @@ import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -25,11 +26,14 @@ public class PaperUtils {
     private static final MiniMessage MINI = MiniMessage.builder()
             .tags(TagResolver.builder().resolvers(
                     StandardTags.hoverEvent(),
+                    StandardTags.reset(),
                     StandardTags.clickEvent(),
+                    StandardTags.decorations(),
                     StandardTags.rainbow(),
                     StandardTags.color(),
                     StandardTags.shadowColor(),
-                    StandardTags.gradient()
+                    StandardTags.gradient(),
+                    TagResolver.resolver("space", (argumentQueue, context) -> Tag.selfClosingInserting(Component.space()))
             ).build()
     ).build();
 

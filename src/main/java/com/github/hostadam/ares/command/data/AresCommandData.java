@@ -23,7 +23,7 @@ public class AresCommandData {
     private final String usageMessage;
     private final String permission;
     private final int requiredArgs;
-    private final boolean executeNoArgs;
+    private final boolean avoidExecution;
 
     private final Map<String, Integer> expectedParameters;
     private final Map<String, Class<?>> tabCompleters;
@@ -31,12 +31,12 @@ public class AresCommandData {
     private final Method method;
     private final Object commandInstance;
 
-    public AresCommandData(String[] labels, String description, String usageMessage, String permission, boolean executeNoArgs, Method method, Object object) {
+    public AresCommandData(String[] labels, String description, String usageMessage, String permission, boolean avoidExecution, Method method, Object object) {
         this.commandLabels = labels;
         this.description = description;
         this.usageMessage = usageMessage;
         this.permission = permission;
-        this.executeNoArgs = executeNoArgs;
+        this.avoidExecution = avoidExecution;
 
         this.method = method;
         this.commandInstance = object;
@@ -102,7 +102,7 @@ public class AresCommandData {
     }
 
     public void execute(CommandContextHelper contextHelper, CommandSender sender, String[] args) {
-        if(this.executeNoArgs) {
+        if(!this.avoidExecution) {
             this.executeMethod(null);
         } else this.executeMethod(new CommandContext(
                 contextHelper,

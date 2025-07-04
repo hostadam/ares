@@ -59,7 +59,7 @@ public class BoardHandler implements Listener {
     }
 
     public void refreshPlayerOnTab(Player player) {
-        settings.applyTabListOrder(player);
+        if(settings != null) settings.applyTabListOrder(player);
     }
 
     private void handlePlayerJoin(Player player) {
