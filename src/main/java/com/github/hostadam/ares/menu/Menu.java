@@ -80,6 +80,12 @@ public abstract class Menu<T extends JavaPlugin> {
         return count;
     }
 
+    public MenuItem fetchForUpdate(String name) {
+        MenuItem presetItem = this.layout.preset(name);
+        if(presetItem == null) return null;
+        return this.buttonBindings.get(presetItem.getMenuChar());
+    }
+
     public void render() {
         this.buttons.clear();
         this.dynamicButtons.clear();

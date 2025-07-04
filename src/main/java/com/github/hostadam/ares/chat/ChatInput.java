@@ -29,6 +29,14 @@ public class ChatInput {
         return this;
     }
 
+    public ChatInput read(Consumer<String> consumer) {
+        this.reader = string -> {
+            consumer.accept(string);
+            return true;
+        };
+        return this;
+    }
+
     public ChatInput nonCancellable() {
         this.cancellable = false;
         return this;

@@ -23,6 +23,7 @@ public class AresCommandData {
     private final String usageMessage;
     private final String permission;
     private final int requiredArgs;
+    private final boolean executeNoArgs;
 
     private final Map<String, Integer> expectedParameters;
     private final Map<String, Class<?>> tabCompleters;
@@ -30,11 +31,12 @@ public class AresCommandData {
     private final Method method;
     private final Object commandInstance;
 
-    public AresCommandData(String[] labels, String description, String usageMessage, String permission, Method method, Object object) {
+    public AresCommandData(String[] labels, String description, String usageMessage, String permission, boolean executeNoArgs, Method method, Object object) {
         this.commandLabels = labels;
         this.description = description;
         this.usageMessage = usageMessage;
         this.permission = permission;
+        this.executeNoArgs = executeNoArgs;
 
         this.method = method;
         this.commandInstance = object;
@@ -88,19 +90,25 @@ public class AresCommandData {
         return List.of(Arrays.copyOfRange(labels, 1, labels.length));
     }
 
-    public void execute(CommandContextHelper contextHelper, CommandSender sender, String[] args) {
-        CommandContext context = new CommandContext(
-                contextHelper,
-                this,
-                sender,
-                args
-        );
-
+    private void executeMethod(CommandContext context) {
         try {
-            method.invoke(this.commandInstance, context);
+            if(context != null) {
+                method.invoke(this.commandInstance, context);
+            } else method.invoke(this.commandInstance);
         } catch (InvocationTargetException | CommandExecutionException ignored) {
         } catch (Exception exception) {
             exception.printStackTrace();
         }
+    }
+
+    public void execute(CommandContextHelper contextHelper, CommandSender sender, String[] args) {
+        if(this.executeNoArgs) {
+            this.executeMethod(null);
+        } else this.executeMethod(new CommandContext(
+                contextHelper,
+                this,
+                sender,
+                args
+        ));
     }
 }

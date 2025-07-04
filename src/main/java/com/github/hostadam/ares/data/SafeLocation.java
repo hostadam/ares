@@ -12,6 +12,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.NumberConversions;
 
 import java.util.Map;
+import java.util.Objects;
 
 @AllArgsConstructor
 public class SafeLocation implements ConfigurationSerializable {
@@ -76,4 +77,20 @@ public class SafeLocation implements ConfigurationSerializable {
                 "z", this.z
         );
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.worldName, x, y, z);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if(this == other) return true;
+        if(!(other instanceof SafeLocation safeLocation)) return false;
+        return Double.compare(this.x, safeLocation.x) == 0
+                && Double.compare(this.y, safeLocation.y) == 0
+                && Double.compare(this.z, safeLocation.z) == 0
+                && (Objects.equals(worldName, safeLocation.worldName));
+    }
+
 }

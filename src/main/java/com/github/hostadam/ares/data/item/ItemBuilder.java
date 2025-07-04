@@ -1,31 +1,21 @@
 package com.github.hostadam.ares.data.item;
 
 import com.github.hostadam.ares.utils.PaperUtils;
-import com.github.hostadam.ares.utils.StringUtils;
-import com.github.hostadam.ares.utils.internals.Incomplete;
 import com.google.common.collect.ImmutableMultimap;
-import io.papermc.paper.datacomponent.DataComponentTypes;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextReplacementConfig;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.*;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Item;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class ItemBuilder {
 
     private final ItemStack itemStack;
     private final ItemMeta itemMeta;
-
-    private String rawName;
-    private List<String> rawLore;
 
     public ItemBuilder(ItemStack itemStack) {
         this.itemStack = itemStack;
@@ -42,17 +32,12 @@ public class ItemBuilder {
     }
 
     public ItemBuilder name(String displayName) {
-        this.rawName = displayName;
+        this.name(PaperUtils.stringToComponent(displayName));
         return this;
     }
 
     public ItemBuilder name(Component component) {
         this.itemMeta.displayName(component);
-        return this;
-    }
-
-    public ItemBuilder lore(List<String> lore) {
-        this.rawLore = lore;
         return this;
     }
 
@@ -70,7 +55,7 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder loreList(List<Component> lore) {
+    public ItemBuilder lore(List<Component> lore) {
         this.itemMeta.lore(lore);
         return this;
     }
@@ -176,16 +161,33 @@ public class ItemBuilder {
         return this.itemStack;
     }
 
-    public ItemStack buildWithResolvers(TagResolver resolver) {
-        if(resolver != null) {
-            if(this.rawName != null) this.itemMeta.displayName(
-                    PaperUtils.formatMiniMessage(this.rawName, resolver)
-            );
+    public ItemStack buildWithPlaceholders(Map<String, Component> placeholders) {
+        if(!placeholders.isEmpty()) {
+            if(this.itemMeta.hasDisplayName()) {
+                Component displayName = this.itemMeta.displayName();
+                Component replacedDisplayName = displayName.replaceText(builder -> {
+                    for (String key : placeholders.keySet()) {
+                        String placeholderTag = "<" + key + ">";
+                        builder.matchLiteral(placeholderTag)
+                                .replacement(placeholders.get(key));
+                    }
+                });
 
-            if(this.rawLore != null) this.itemMeta.lore(this.rawLore.stream()
-                    .map(rawLore -> PaperUtils.formatMiniMessage(rawLore, resolver))
-                    .toList()
-            );
+                this.itemMeta.displayName(replacedDisplayName);
+            }
+
+            if(this.itemMeta.hasLore()) {
+                List<Component> lore = this.itemMeta.lore();
+                List<Component> replacedLore = lore.stream().map(loreLine -> loreLine.replaceText(builder -> {
+                    for(String key : placeholders.keySet()) {
+                        String placeholderTag = "<" + key + ">";
+                        builder.matchLiteral(placeholderTag)
+                                .replacement(placeholders.get(key));
+                    }
+                })).toList();
+
+                this.itemMeta.lore(replacedLore);
+            }
         }
 
         return this.build();

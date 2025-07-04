@@ -6,28 +6,35 @@ import com.github.hostadam.ares.utils.TimeUtils;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Floats;
 import com.google.common.primitives.Ints;
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.*;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CommandContextHelper {
 
-    private final Map<Class<?>, ParameterTabCompleter<?>> tabCompleters;
+    private final Map<Class<?>, ParameterTabCompleter> tabCompleters;
     private final Map<Class<?>, ParameterArgParser<?>> argParsers;
 
     public CommandContextHelper() {
         this.tabCompleters = new ConcurrentHashMap<>();
         this.argParsers = new ConcurrentHashMap<>();
         this.registerDefaultParsers();
+        this.registerDefaultTabCompleters();
     }
 
-    public <T> ParameterTabCompleter<T> getTabCompletion(Class<T> clazz) {
+    public ParameterTabCompleter getTabCompletion(Class<?> clazz) {
         if(!this.tabCompleters.containsKey(clazz)) return null;
-        return (ParameterTabCompleter<T>) this.tabCompleters.get(clazz);
+        return this.tabCompleters.get(clazz);
     }
 
     private void registerDefaultParsers() {
@@ -35,6 +42,16 @@ public class CommandContextHelper {
         this.registerParser(Player.class, arg -> Optional.ofNullable(Bukkit.getPlayer(arg)));
         this.registerParser(OfflinePlayer.class, arg -> Optional.ofNullable(PlayerUtils.getOfflinePlayer(arg)));
         this.registerParser(Material.class, arg -> Optional.ofNullable(Material.getMaterial(arg.toUpperCase())));
+        this.registerParser(Enchantment.class, arg -> Optional.ofNullable(RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT).get(NamespacedKey.minecraft(arg.toUpperCase()))));
+        this.registerParser(Material.class, arg -> Optional.ofNullable(Material.getMaterial(arg.toUpperCase())));
+        this.registerParser(TextColor.class, arg -> {
+            TextColor textColor = NamedTextColor.NAMES.value(arg);
+            if(textColor == null) {
+                textColor = TextColor.fromHexString(arg);
+            }
+
+            return Optional.ofNullable(textColor);
+        });
 
         this.registerParser(String.class, Optional::of);
         this.registerParser(Boolean.class, arg -> {
@@ -87,11 +104,20 @@ public class CommandContextHelper {
         });
     }
 
+    private void registerDefaultTabCompleters() {
+        this.registerTabCompleter(Enchantment.class, (sender, input) -> RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT).keyStream().map(NamespacedKey::value).filter(string -> input.isEmpty() || string.startsWith(input)).toList());
+        this.registerTabCompleter(World.class, (sender, input) -> Bukkit.getWorlds().stream().map(World::getName).filter(string -> input.isEmpty() || string.startsWith(input)).toList());
+        this.registerTabCompleter(Player.class, (sender, input) -> Bukkit.getOnlinePlayers().stream().map(Player::getName).filter(string -> input.isEmpty() || string.startsWith(input)).toList());
+        this.registerTabCompleter(NamedTextColor.class, (sender, input) -> NamedTextColor.NAMES.keys().stream().filter(string -> input.isEmpty() || string.startsWith(input)).toList());
+        this.registerTabCompleter(GameMode.class, (sender, input) -> Arrays.stream(GameMode.values()).map(GameMode::name).map(String::toLowerCase).filter(string -> input.isEmpty() || string.startsWith(input)).toList());
+    }
+
     public <T> void registerParser(Class<T> clazz, ParameterArgParser<T> parser) {
         this.argParsers.put(clazz, parser);
     }
 
-    public <T> void registerTabCompleter(Class<T> clazz, ParameterTabCompleter<T> tabCompleter) {
+    //TODO: Create these
+    public <T> void registerTabCompleter(Class<T> clazz, ParameterTabCompleter tabCompleter) {
         this.tabCompleters.put(clazz, tabCompleter);
     }
 

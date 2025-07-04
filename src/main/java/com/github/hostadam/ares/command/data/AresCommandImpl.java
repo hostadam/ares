@@ -8,7 +8,6 @@ import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -17,7 +16,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 
 @Getter
 public class AresCommandImpl extends Command {
@@ -59,7 +57,9 @@ public class AresCommandImpl extends Command {
         if(this.subcommands.isEmpty()) {
             this.command.execute(this.commandHandler.context(), sender, args);
         } else if(args.length == 0) {
-            this.sendUsage(sender, 0);
+            if(this.command.isExecuteNoArgs()) {
+                this.command.execute(this.commandHandler.context(), sender, args);
+            } else this.sendUsage(sender, 0);
         } else {
             String arg = args[0].toLowerCase();
             if(arg.equals("help")) {
@@ -115,7 +115,7 @@ public class AresCommandImpl extends Command {
                 int subArgPos = argCount - 2;
                 Class<?> clazz = sub.getTabCompleterClass(subArgPos);
                 if(clazz != null) {
-                    ParameterTabCompleter<?> tabCompleter = this.commandHandler.context().getTabCompletion(clazz);
+                    ParameterTabCompleter tabCompleter = this.commandHandler.context().getTabCompletion(clazz);
                     if(tabCompleter != null) {
                         return tabCompleter.suggest(sender, args[argCount - 1]);
                     }
@@ -128,7 +128,7 @@ public class AresCommandImpl extends Command {
         int argPos = Math.max(0, argCount - 1);
         Class<?> clazz = this.command.getTabCompleterClass(argPos);
         if(clazz != null) {
-            ParameterTabCompleter<?> tabCompleter = this.commandHandler.context().getTabCompletion(clazz);
+            ParameterTabCompleter tabCompleter = this.commandHandler.context().getTabCompletion(clazz);
             if(tabCompleter != null) {
                 return tabCompleter.suggest(sender, args[argPos]);
             }

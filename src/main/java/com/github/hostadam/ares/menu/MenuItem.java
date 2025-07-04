@@ -3,14 +3,19 @@ package com.github.hostadam.ares.menu;
 import com.github.hostadam.ares.data.item.ItemBuilder;
 import com.github.hostadam.ares.data.item.ItemParser;
 import com.github.hostadam.ares.utils.internals.ScheduledForChange;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Item;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @ScheduledForChange(
         since = "4.1.1",
@@ -20,6 +25,7 @@ import org.bukkit.inventory.ItemStack;
                 """
 )
 @Getter
+@AllArgsConstructor
 public class MenuItem {
 
     @Setter
@@ -31,7 +37,7 @@ public class MenuItem {
     private Type type = Type.NORMAL;
     private MenuItemClickHandler clickHandler;
 
-    private TagResolver resolver;
+    private final Map<String, Component> placeholders = new HashMap<>();
 
     public MenuItem(ItemBuilder builder) {
         this.itemStack = (builder == null ? new ItemBuilder(Material.AIR) : builder);
@@ -51,8 +57,8 @@ public class MenuItem {
         }
     }
 
-    public MenuItem tagResolver(TagResolver... resolvers) {
-        this.resolver = TagResolver.resolver(resolvers);
+    public MenuItem withPlaceholder(String key, Component value) {
+        this.placeholders.put(key, value);
         return this;
     }
 
@@ -62,7 +68,14 @@ public class MenuItem {
 
     public ItemStack buildItem(Menu<?> menu) {
         if(this.checkIfFallback(menu)) return this.fallbackItem.clone();
-        return resolver != null ? itemStack.buildWithResolvers(resolver) : itemStack.build();
+        return itemStack.buildWithPlaceholders(this.placeholders);
+    }
+
+    public void rebuildItem(MenuItem copyFrom) {
+        this.itemStack = copyFrom.itemStack;
+        this.fallbackItem = copyFrom.fallbackItem;
+        this.placeholders.clear();
+        this.placeholders.putAll(copyFrom.placeholders);
     }
 
     public MenuItem permission(String permission) {
@@ -111,6 +124,14 @@ public class MenuItem {
 
     public boolean hasFallbackItem() {
         return this.fallbackItem != null;
+    }
+
+    public MenuItem copy() {
+        MenuItem menuItem = new MenuItem(this.itemStack).fallback(this.fallbackItem).permission(this.permission).type(this.type).click(this.clickHandler);
+        menuItem.menuChar = this.menuChar;
+        menuItem.placeholders.clear();
+        menuItem.placeholders.putAll(this.placeholders);
+        return menuItem;
     }
 
     public enum Type {

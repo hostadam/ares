@@ -1,7 +1,6 @@
 package com.github.hostadam.ares.menu;
 
 import com.github.hostadam.ares.utils.PaperUtils;
-import com.github.hostadam.ares.utils.StringUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.configuration.ConfigurationSection;
@@ -47,7 +46,7 @@ public class MenuLayout {
 
     public MenuLayout(ConfigurationSection section) {
         if(section == null) throw new IllegalArgumentException("Configuration section is null for menu template");
-        this.title = PaperUtils.formatMiniMessage(section.getString("title", "Inventory"));
+        this.title = PaperUtils.stringToComponent(section.getString("title", "Inventory"));
         this.itemsByName = new HashMap<>();
 
         if(section.contains("type")) {
@@ -76,14 +75,15 @@ public class MenuLayout {
     }
 
     public MenuItem preset(String name) {
-        return this.itemsByName.get(name.toLowerCase());
+        if(!this.itemsByName.containsKey(name)) return null;
+        return this.itemsByName.get(name.toLowerCase()).copy();
     }
 
     public Map<Character, MenuItem> getPredefinedItems() {
         Map<Character, MenuItem> mappings = new HashMap<>();
         for(MenuItem item : this.itemsByName.values()) {
             if(!item.hasAssignedChar()) continue;
-            mappings.put(item.getMenuChar(), item);
+            mappings.put(item.getMenuChar(), item.copy());
         }
 
         return mappings;

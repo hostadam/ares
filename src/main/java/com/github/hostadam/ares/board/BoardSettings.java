@@ -26,7 +26,7 @@ public class BoardSettings {
     }
 
     public BoardSettings interval(int interval) {
-        this.interval = interval;
+        this.interval = Math.max(1, interval);
         return this;
     }
 

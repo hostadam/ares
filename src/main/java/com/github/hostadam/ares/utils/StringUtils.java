@@ -9,16 +9,27 @@ import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StringUtils {
 
     public static final char BOX = '⬛';
-    public static final Pattern UNICODE_PRIVATE_PATTERN = Pattern.compile("[\\uE000-\\uF8FF]");
+    private static final Pattern PUA_PATTERN = Pattern.compile("[\uE000-\uF8FF]|[\uDB80-\uDBBF][\uDC00-\uDFFF]|[\uDBC0-\uDBFF][\uDC00-\uDFFF]");
     private static final Pattern HEX_PATTERN = Pattern.compile("&#[a-fA-F0-9]{6}");
     private static final Pattern ALPHANUMERIC_PATTERN = Pattern.compile("\\p{Alnum}+");
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.#");
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss aa");
+
+    public static String formatFullDate(Date date) {
+        return DATE_FORMAT.format(date);
+    }
+
+    public static String formatFullDate(long time) {
+        return DATE_FORMAT.format(new Date(time));
+    }
 
     public static String formatBigNumeric(double value) {
         if(value >= 1000000000) {

@@ -49,11 +49,12 @@ public class CommandHandler {
         if(this.commandMap == null) return;
         for(Method method : object.getClass().getDeclaredMethods()) {
             // Ignore if no command ctx
-            if(method.getParameterCount() != 1 || !CommandContext.class.isAssignableFrom(method.getParameters()[0].getType())) continue;
 
             if(method.isAnnotationPresent(AresCommand.class)) {
+                boolean executeNoArgs = method.getParameterCount() != 0 || !CommandContext.class.isAssignableFrom(method.getParameters()[0].getType());
+
                 AresCommand command = method.getAnnotation(AresCommand.class);
-                AresCommandData data = new AresCommandData(command.labels(), command.description(), command.usage(), command.permission(), method, object);
+                AresCommandData data = new AresCommandData(command.labels(), command.description(), command.usage(), command.permission(), executeNoArgs, method, object);
 
                 AresCommandImpl implementation = new AresCommandImpl(this, data);
                 String name = implementation.getName();
@@ -66,8 +67,10 @@ public class CommandHandler {
                     return null;
                 });
             } else if(method.isAnnotationPresent(AresSubCommand.class)) {
+                if(method.getParameterCount() != 1 || !CommandContext.class.isAssignableFrom(method.getParameters()[0].getType())) continue;
+
                 AresSubCommand command = method.getAnnotation(AresSubCommand.class);
-                AresCommandData data = new AresCommandData(command.labels(), command.description(), command.usage(), command.permission(), method, object);
+                AresCommandData data = new AresCommandData(command.labels(), command.description(), command.usage(), command.permission(), false, method, object);
                 String parent = command.parent();
                 if(!this.commands.containsKey(parent)) {
                     this.subCommandQueue.computeIfAbsent(parent, string -> new ArrayList<>()).add(data);

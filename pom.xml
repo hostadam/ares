@@ -6,7 +6,7 @@
 
     <groupId>com.github.hostadam</groupId>
     <artifactId>ares</artifactId>
-    <version>4.1.2</version>
+    <version>4.2.6</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

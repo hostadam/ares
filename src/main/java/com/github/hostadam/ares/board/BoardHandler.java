@@ -58,6 +58,10 @@ public class BoardHandler implements Listener {
         }
     }
 
+    public void refreshPlayerOnTab(Player player) {
+        settings.applyTabListOrder(player);
+    }
+
     private void handlePlayerJoin(Player player) {
         if(this.settings == null) return;
         if(this.settings.hasStyle()) {
@@ -66,16 +70,16 @@ public class BoardHandler implements Listener {
             this.checkUpdateTask();
         }
 
-        settings.applyTabListOrder(player);
+        this.refreshPlayerOnTab(player);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         this.handlePlayerJoin(player);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         Board board = this.boards.remove(player.getUniqueId());

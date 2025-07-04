@@ -8,11 +8,9 @@ import java.io.IOException;
 
 public class ConfigFile extends YamlConfiguration {
 
-    private JavaPlugin plugin;
     private File file;
 
     public ConfigFile(JavaPlugin plugin, String name) {
-        this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), name + ".yml");
 
         if(!file.exists()) {
