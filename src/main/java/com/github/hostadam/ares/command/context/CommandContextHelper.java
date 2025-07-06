@@ -42,7 +42,7 @@ public class CommandContextHelper {
         this.registerParser(Player.class, arg -> Optional.ofNullable(Bukkit.getPlayer(arg)));
         this.registerParser(OfflinePlayer.class, arg -> Optional.ofNullable(PlayerUtils.getOfflinePlayer(arg)));
         this.registerParser(Material.class, arg -> Optional.ofNullable(Material.getMaterial(arg.toUpperCase())));
-        this.registerParser(Enchantment.class, arg -> Optional.ofNullable(RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT).get(NamespacedKey.minecraft(arg.toUpperCase()))));
+        this.registerParser(Enchantment.class, arg -> Optional.ofNullable(RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT).get(NamespacedKey.minecraft(arg.toLowerCase()))));
         this.registerParser(Material.class, arg -> Optional.ofNullable(Material.getMaterial(arg.toUpperCase())));
         this.registerParser(TextColor.class, arg -> {
             TextColor textColor = NamedTextColor.NAMES.value(arg);
@@ -105,18 +105,18 @@ public class CommandContextHelper {
     }
 
     private void registerDefaultTabCompleters() {
-        this.registerTabCompleter(Enchantment.class, (sender, input) -> RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT).keyStream().map(NamespacedKey::value).filter(string -> input.isEmpty() || string.startsWith(input)).toList());
-        this.registerTabCompleter(World.class, (sender, input) -> Bukkit.getWorlds().stream().map(World::getName).filter(string -> input.isEmpty() || string.startsWith(input)).toList());
-        this.registerTabCompleter(Player.class, (sender, input) -> Bukkit.getOnlinePlayers().stream().map(Player::getName).filter(string -> input.isEmpty() || string.startsWith(input)).toList());
-        this.registerTabCompleter(NamedTextColor.class, (sender, input) -> NamedTextColor.NAMES.keys().stream().filter(string -> input.isEmpty() || string.startsWith(input)).toList());
-        this.registerTabCompleter(GameMode.class, (sender, input) -> Arrays.stream(GameMode.values()).map(GameMode::name).map(String::toLowerCase).filter(string -> input.isEmpty() || string.startsWith(input)).toList());
+        this.registerTabCompleter(Enchantment.class, (sender, input) -> RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT).keyStream().map(NamespacedKey::value).filter(string -> input.isEmpty() || string.toLowerCase().startsWith(input)).toList());
+        this.registerTabCompleter(World.class, (sender, input) -> Bukkit.getWorlds().stream().map(World::getName).filter(string -> input.isEmpty() || string.toLowerCase().startsWith(input)).toList());
+        this.registerTabCompleter(Player.class, (sender, input) -> Bukkit.getOnlinePlayers().stream().map(Player::getName).filter(string -> input.isEmpty() || string.toLowerCase().startsWith(input)).toList());
+        this.registerTabCompleter(NamedTextColor.class, (sender, input) -> NamedTextColor.NAMES.keys().stream().filter(string -> input.isEmpty() || string.toLowerCase().startsWith(input)).toList());
+        this.registerTabCompleter(GameMode.class, (sender, input) -> Arrays.stream(GameMode.values()).map(GameMode::name).map(String::toLowerCase).filter(string -> input.isEmpty() || string.toLowerCase().startsWith(input)).toList());
+        this.registerTabCompleter(Material.class, (sender, input) -> Arrays.stream(Material.values()).map(Material::name).filter(string -> input.isEmpty() || string.toLowerCase().startsWith(input)).toList());
     }
 
     public <T> void registerParser(Class<T> clazz, ParameterArgParser<T> parser) {
         this.argParsers.put(clazz, parser);
     }
 
-    //TODO: Create these
     public <T> void registerTabCompleter(Class<T> clazz, ParameterTabCompleter tabCompleter) {
         this.tabCompleters.put(clazz, tabCompleter);
     }

@@ -162,6 +162,7 @@ public class ItemBuilder {
     }
 
     public ItemStack buildWithPlaceholders(Map<String, Component> placeholders) {
+        //TODO: Borrow method from Hades
         if(!placeholders.isEmpty()) {
             if(this.itemMeta.hasDisplayName()) {
                 Component displayName = this.itemMeta.displayName();

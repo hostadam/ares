@@ -76,6 +76,10 @@ public class PaperUtils {
         return MINI.deserialize(message);
     }
 
+    public static Component stringToComponent(String message, TagResolver resolver) {
+        return MINI.deserialize(message, resolver);
+    }
+
     public static Component jsonToComponent(String json) {
         return JSON.deserialize(json);
     }

@@ -44,6 +44,16 @@ public class TimeUtils {
         return (hrs > 0 ? hrs + ":" : "") + String.format("%02d:%02d", min, sec);
     }
 
+    private static void append(StringBuilder builder, long amount, boolean compact, String compactString, String nonCompactString) {
+        if(amount > 0) {
+            if(!builder.isEmpty()) {
+                builder.append(" ");
+            }
+
+            builder.append(amount).append(compact ? compactString : amount == 1 ? " " + nonCompactString : " " + nonCompactString + "s");
+        }
+    }
+
     public static String format(long duration, boolean compact) {
         if (duration == Long.MAX_VALUE) return "Permanent";
         long seconds = duration / 1000;
@@ -52,10 +62,10 @@ public class TimeUtils {
         long days = hrs / 24; hrs %= 24;
 
         StringBuilder sb = new StringBuilder();
-        if (days > 0) sb.append(days).append(compact ? "d" : days == 1 ? " day" : " days");
-        if (hrs > 0) sb.append(hrs).append(compact ? "h" : hrs == 1 ? " hour" : " hours");
-        if (mins > 0) sb.append(mins).append(compact ? "m" : mins == 1 ? " minute" : " minutes");
-        if (seconds > 0) sb.append(seconds).append(compact ? "s" : seconds == 1 ? " second" : " seconds");
+        append(sb, days, compact, "d", "day");
+        append(sb, hrs, compact, "h", "hour");
+        append(sb, mins, compact, "m", "minute");
+        append(sb, seconds, compact, "s", "second");
 
         return !sb.isEmpty() ? sb.toString() : "0s";
     }

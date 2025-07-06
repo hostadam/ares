@@ -7,6 +7,8 @@ import com.github.hostadam.ares.command.context.CommandContextHelper;
 import com.github.hostadam.ares.command.tabcompletion.ParameterTabCompleter;
 import com.github.hostadam.ares.command.data.AresCommandData;
 import com.github.hostadam.ares.command.data.AresCommandImpl;
+import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.command.CommandMap;
@@ -17,7 +19,10 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 
+
 public class CommandHandler {
+
+    private @Getter @Setter boolean debugMode = false;
 
     private CommandMap commandMap;
     private final CommandContextHelper contextHelper;
@@ -51,10 +56,10 @@ public class CommandHandler {
             // Ignore if no command ctx
 
             if(method.isAnnotationPresent(AresCommand.class)) {
-                boolean avoidExecution = method.getParameterCount() != 1 || !CommandContext.class.isAssignableFrom(method.getParameters()[0].getType());
+                boolean sendUsagePrioritized = method.getParameterCount() != 1 || !CommandContext.class.isAssignableFrom(method.getParameters()[0].getType());
 
                 AresCommand command = method.getAnnotation(AresCommand.class);
-                AresCommandData data = new AresCommandData(command.labels(), command.description(), command.usage(), command.permission(), avoidExecution, method, object);
+                AresCommandData data = new AresCommandData(this, command.labels(), command.description(), command.usage(), command.permission(), sendUsagePrioritized, method, object);
 
                 AresCommandImpl implementation = new AresCommandImpl(this, data);
                 String name = implementation.getName();
@@ -70,7 +75,7 @@ public class CommandHandler {
                 if(method.getParameterCount() != 1 || !CommandContext.class.isAssignableFrom(method.getParameters()[0].getType())) continue;
 
                 AresSubCommand command = method.getAnnotation(AresSubCommand.class);
-                AresCommandData data = new AresCommandData(command.labels(), command.description(), command.usage(), command.permission(), true, method, object);
+                AresCommandData data = new AresCommandData(this, command.labels(), command.description(), command.usage(), command.permission(), true, method, object);
                 String parent = command.parent();
                 if(!this.commands.containsKey(parent)) {
                     this.subCommandQueue.computeIfAbsent(parent, string -> new ArrayList<>()).add(data);

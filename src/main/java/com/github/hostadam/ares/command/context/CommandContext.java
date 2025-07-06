@@ -26,16 +26,19 @@ public class CommandContext {
         this.arguments = arguments;
     }
 
+    public String[] getRawArguments() {
+        return Arrays.copyOf(this.arguments, this.arguments.length);
+    }
+
     public void response(Component message) {
         this.commandSender.sendMessage(message);
     }
 
     /** Helper methods **/
-    private <T> T getArgument(int index, T defaultValue) {
+    private <T> T getArgument(int index, Class<T> type, T defaultValue) {
         if(index == -1 || index >= arguments.length) return defaultValue;
-        Class<?> clazz = defaultValue.getClass();
         String value = arguments[index];
-        Optional<T> optional = this.helper.parse(clazz, value);
+        Optional<T> optional = this.helper.parse(type, value);
         return optional.orElse(defaultValue);
     }
 
@@ -90,16 +93,15 @@ public class CommandContext {
     }
 
     // Used to fetch an argument directly with a provided default value as fallback
-    public <T> T getArgument(String parameterName, T defaultValue) {
+    public <T> T getArgument(String parameterName, Class<T> type, T defaultValue) {
         int index = this.command.getIndexOf(parameterName);
-        return this.getArgument(index, defaultValue);
+        return this.getArgument(index, type, defaultValue);
     }
 
-    public <T> T getArgument(String parameterName, Predicate<T> predicate, T defaultValue) {
+    public <T> T getArgument(String parameterName, Class<T> type, Predicate<T> predicate, T defaultValue) {
         int index = this.command.getIndexOf(parameterName);
-        T value = this.getArgument(index, defaultValue);
-        if(predicate != null && !predicate.test(value)) return defaultValue;
-        return value;
+        T value = this.getArgument(index, type, defaultValue);
+        return (predicate == null || predicate.test(value)) ? value : defaultValue;
     }
 
     public <T> T requireArg(String parameterName, Class<T> type) {

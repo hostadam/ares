@@ -1,11 +1,14 @@
 package com.github.hostadam.ares.command.data;
 
-import com.github.hostadam.ares.command.tabcompletion.ParameterTabCompleter;
 import com.github.hostadam.ares.command.handler.CommandHandler;
+import com.github.hostadam.ares.command.tabcompletion.ParameterTabCompleter;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Location;
@@ -50,16 +53,18 @@ public class AresCommandImpl extends Command {
         }
 
         if(this.command.getRequiredArgs() > 0 && args.length < this.command.getRequiredArgs()) {
-            this.command.execute(this.commandHandler.context(), sender, args);
+            sender.sendMessage(Component.text("Usage: /" + label + " " + command.getUsageMessage(), NamedTextColor.RED));
             return true;
         }
 
         if(this.subcommands.isEmpty()) {
             this.command.execute(this.commandHandler.context(), sender, args);
         } else if(args.length == 0) {
-            if(!this.command.isAvoidExecution()) {
+            if(this.command.isSendUsagePrioritized()) {
+                this.sendUsage(sender, 1);
+            } else {
                 this.command.execute(this.commandHandler.context(), sender, args);
-            } else this.sendUsage(sender, 0);
+            }
         } else {
             String arg = args[0].toLowerCase();
             if(arg.equals("help")) {
@@ -69,13 +74,13 @@ public class AresCommandImpl extends Command {
                     if (parsed != null) page = parsed;
                 }
 
-                sendUsage(sender, page - 1);
+                sendUsage(sender, page);
                 return true;
             }
 
             AresCommandData subcommand = this.getSubCommand(arg);
             if(subcommand == null) {
-                this.sendUsage(sender, 0);
+                this.sendUsage(sender, 1);
                 return true;
             }
 
@@ -117,7 +122,7 @@ public class AresCommandImpl extends Command {
                 if(clazz != null) {
                     ParameterTabCompleter tabCompleter = this.commandHandler.context().getTabCompletion(clazz);
                     if(tabCompleter != null) {
-                        return tabCompleter.suggest(sender, args[argCount - 1]);
+                        return tabCompleter.suggest(sender, args[argCount - 1].toLowerCase());
                     }
                 }
             }
@@ -130,7 +135,7 @@ public class AresCommandImpl extends Command {
         if(clazz != null) {
             ParameterTabCompleter tabCompleter = this.commandHandler.context().getTabCompletion(clazz);
             if(tabCompleter != null) {
-                return tabCompleter.suggest(sender, args[argPos]);
+                return tabCompleter.suggest(sender, args[argPos].toLowerCase());
             }
         }
 
@@ -138,7 +143,7 @@ public class AresCommandImpl extends Command {
     }
 
     private void sendUsage(CommandSender sender, int page) {
-        if(page < 0) page = 0;
+        int adjustedPage = page - 1;
 
         List<AresCommandData> allSubCommands = this.subcommands.values()
                 .stream()
@@ -147,16 +152,16 @@ public class AresCommandImpl extends Command {
 
         List<AresCommandData> subCommands;
         final int commandsPerPage = 10;
-        final int maxPages = (int) Math.floor((double) allSubCommands.size() / (double) commandsPerPage);
+        final int maxPages = (int) Math.ceil((double) allSubCommands.size() / (double) commandsPerPage);
 
-        if(maxPages == 0) {
+        if(maxPages <= 1) {
             subCommands = Lists.newArrayList(allSubCommands);
         } else if(page <= maxPages) {
-            final int startOfRange = page * commandsPerPage;
-            final int endOfRange = (page + 1) * commandsPerPage - 1;
+            final int startOfRange = adjustedPage * commandsPerPage;
+            final int endOfRange = (page) * commandsPerPage - 1;
             subCommands = allSubCommands.subList(startOfRange, Math.min(endOfRange, allSubCommands.size()));
         } else {
-            sender.sendMessage(Component.text("There are only " + (maxPages + 1) + " pages.", NamedTextColor.RED));
+            sender.sendMessage(Component.text("There are only " + maxPages + " pages.", NamedTextColor.RED));
             return;
         }
 
@@ -167,7 +172,6 @@ public class AresCommandImpl extends Command {
 
         String mainLabel = this.command.getMainLabel();
         sender.sendMessage(Component.space());
-        sender.sendMessage(Component.space());
         sender.sendMessage(Component.text(mainLabel.toUpperCase(), NamedTextColor.YELLOW, TextDecoration.BOLD).append(Component.text(" (Command Help)", NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)));
         sender.sendMessage(Component.text("<> = required, [] = optional", NamedTextColor.GRAY));
         sender.sendMessage(Component.space());
@@ -176,12 +180,35 @@ public class AresCommandImpl extends Command {
             sender.sendMessage(Component.text("/" + mainLabel + " " + subCommand.getMainLabel() + " " + subCommand.getUsageMessage(), NamedTextColor.YELLOW).append(Component.text(" - " + subCommand.getDescription(), NamedTextColor.GRAY)));
         }
 
-        if(maxPages > 0) {
-            sender.sendMessage(Component.space());
-            sender.sendMessage(Component.text("Showing page " + (page + 1) + " out of " + (maxPages + 1), NamedTextColor.GRAY, TextDecoration.ITALIC));
-        }
+        sender.sendMessage(Component.space());
 
-        sender.sendMessage(Component.space());
-        sender.sendMessage(Component.space());
+        boolean hasPreviousPage = page > 1;
+        boolean hasNextPage = page < maxPages;
+        if(hasPreviousPage || hasNextPage) {
+            List<Component> paginationParts = new ArrayList<>();
+
+            if(hasPreviousPage) {
+                Component previousPage = Component.text("← Previous Page")
+                        .color(NamedTextColor.RED)
+                        .clickEvent(ClickEvent.runCommand(this.getLabel() + " help " + adjustedPage))
+                        .hoverEvent(HoverEvent.showText(Component.text("Go to page " + adjustedPage, NamedTextColor.GREEN)));
+                paginationParts.add(previousPage);
+            }
+
+            if(hasPreviousPage && hasNextPage) {
+                paginationParts.add(Component.text(" | ").color(NamedTextColor.GRAY));
+            }
+
+            if(hasNextPage) {
+                Component nextPage = Component.text("Next Page →")
+                        .color(NamedTextColor.GREEN)
+                        .clickEvent(ClickEvent.runCommand(this.getLabel() + " help " + (page + 1)))
+                        .hoverEvent(HoverEvent.showText(Component.text("Go to page " + (page + 1), NamedTextColor.GREEN)));
+                paginationParts.add(nextPage);
+            }
+
+            Component finalPaginationComponent = Component.join(JoinConfiguration.separator(Component.empty()), paginationParts);
+            sender.sendMessage(finalPaginationComponent);
+        }
     }
 }
