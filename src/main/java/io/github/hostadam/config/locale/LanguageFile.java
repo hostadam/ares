@@ -5,7 +5,6 @@ import io.github.hostadam.config.locale.performance.*;
 import io.github.hostadam.utilities.PaperUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
-import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LanguageFile extends ConfigFile {
@@ -56,7 +54,7 @@ public class LanguageFile extends ConfigFile {
         }
     }
 
-    private ComponentVariant parseComponent(String input) {
+    private CachedComponentSegment parseComponent(String input) {
         Component root = PaperUtils.stringToComponent(input); // parse MiniMessage once
         List<ComponentLike> parts = new ArrayList<>();
         collectParts(root, parts);
@@ -92,9 +90,9 @@ public class LanguageFile extends ConfigFile {
     private CachedComponent parseList(List<String> list) {
         if(list.isEmpty()) return null;
 
-        List<ComponentVariant> components = new ArrayList<>(list.size());
+        List<CachedComponentSegment> components = new ArrayList<>(list.size());
         for(String string : list) {
-            ComponentVariant variant = this.parseComponent(string);
+            CachedComponentSegment variant = this.parseComponent(string);
             components.add(variant);
         }
 
@@ -103,7 +101,7 @@ public class LanguageFile extends ConfigFile {
 
     private CachedComponent parseMessage(String string) {
         if(string == null) return null;
-        ComponentVariant variant = this.parseComponent(string);
+        CachedComponentSegment variant = this.parseComponent(string);
         return new CachedComponent(List.of(variant));
     }
 
