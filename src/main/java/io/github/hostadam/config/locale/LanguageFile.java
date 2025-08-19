@@ -1,12 +1,12 @@
 package io.github.hostadam.config.locale;
 
 import io.github.hostadam.config.ConfigFile;
-import io.github.hostadam.config.locale.performance.CachedComponent;
+import io.github.hostadam.config.locale.performance.*;
 import io.github.hostadam.utilities.PaperUtils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.event.ClickEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -56,81 +56,59 @@ public class LanguageFile extends ConfigFile {
         }
     }
 
+    private ComponentVariant parseComponent(String input) {
+        Component root = PaperUtils.stringToComponent(input); // parse MiniMessage once
+        List<ComponentLike> parts = new ArrayList<>();
+        collectParts(root, parts);
+        return new DynamicComponent(parts);
+    }
+
+    private void collectParts(Component comp, List<ComponentLike> parts) {
+        if (comp instanceof TextComponent text) {
+            String content = text.content();
+            int last = 0;
+            for (int i = 0; i < content.length(); i++) {
+                if (content.charAt(i) == '{') {
+                    int end = content.indexOf('}', i);
+                    if (end > i) {
+                        if (i > last) parts.add(new StaticComponent(Component.text(content.substring(last, i), text.decorations(), text.color())));
+                        parts.add(new PlaceholderComponent(content.substring(i + 1, end)));
+                        i = end;
+                        last = i + 1;
+                    }
+                }
+            }
+
+            if(last < content.length()) {
+                parts.add(new StaticComponent(Component.text(content.substring(last), text.color(), text.decorations())));
+            }
+        }
+
+        for(Component child : comp.children()) {
+            collectParts(child, parts);
+        }
+    }
+
     private CachedComponent parseList(List<String> list) {
         if(list.isEmpty()) return null;
 
-        List<Component> components = new ArrayList<>();
-        boolean hasPlaceholders = false;
-
+        List<ComponentVariant> components = new ArrayList<>(list.size());
         for(String string : list) {
-            Matcher matcher = PLACEHOLDER_PATTERN.matcher(string);
-            if(matcher.find()) {
-                hasPlaceholders = true;
-            }
-
-            components.add(PaperUtils.stringToComponent(string));
+            ComponentVariant variant = this.parseComponent(string);
+            components.add(variant);
         }
 
-        Component joinedComponent = Component.join(JoinConfiguration.separator(Component.newline()), components);
-        boolean needsExtraRoundtrip = hasInnerPlaceholders(joinedComponent);
-        return new CachedComponent(joinedComponent, hasPlaceholders, needsExtraRoundtrip);
+        return new CachedComponent(components);
     }
 
-    private CachedComponent parseMessage(String miniMessageString) {
-        if(miniMessageString == null || miniMessageString.isEmpty()) return null;
-        Matcher matcher = PLACEHOLDER_PATTERN.matcher(miniMessageString);
-        boolean hasPlaceholder = matcher.find();
-
-        Component component = PaperUtils.stringToComponent(miniMessageString);
-        boolean needsExtraRoundtrip = hasInnerPlaceholders(component);
-        return new CachedComponent(component, hasPlaceholder, needsExtraRoundtrip);
+    private CachedComponent parseMessage(String string) {
+        if(string == null) return null;
+        ComponentVariant variant = this.parseComponent(string);
+        return new CachedComponent(List.of(variant));
     }
 
     public Component resolve(String key, PlaceholderProvider provider) {
         CachedComponent cache = this.cachedComponents.get(key);
-        if(cache == null) return Component.empty();
-        return getComponent(provider, cache);
-    }
-
-    private Component getComponent(PlaceholderProvider provider, CachedComponent cache) {
-        Component component = cache.component();
-        if(!cache.containsPlaceholders()) {
-            return component;
-        }
-
-        component = component.replaceText(builder -> builder
-                .match(PLACEHOLDER_PATTERN)
-                .replacement((matchResult, builder1) -> {
-                    String key = matchResult.group(1);
-                    Component value = provider.get(key);
-                    return value != null ? value : Component.text(matchResult.group());
-                })
-        );
-
-        return cache.needsExtraRoundtrip() ? this.recursiveResolving(component, provider) : component;
-    }
-
-    private Component recursiveResolving(Component component, PlaceholderProvider provider) {
-        ClickEvent clickEvent = component.clickEvent();
-        if(clickEvent != null && clickEvent.payload() instanceof ClickEvent.Payload.Text text) {
-            String value = text.value();
-            Matcher matcher = PLACEHOLDER_PATTERN.matcher(value);
-            if(matcher.find()) {
-                String replacedValue = matcher.replaceAll(matchResult -> {
-                    String key = matchResult.group(1);
-                    Component replacement = provider.get(key);
-                    return replacement instanceof TextComponent textComponent ? textComponent.content() : matchResult.group();
-                });
-
-                return component.clickEvent(ClickEvent.clickEvent(clickEvent.action(), replacedValue));
-            }
-        }
-
-        return component;
-    }
-
-    private boolean hasInnerPlaceholders(Component component) {
-        ClickEvent clickEvent = component.clickEvent();
-        return clickEvent != null && clickEvent.payload() instanceof ClickEvent.Payload.Text text && PLACEHOLDER_PATTERN.matcher(text.value()).find();
+        return cache != null ? cache.resolve(provider) : Component.empty();
     }
 }
