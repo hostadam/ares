@@ -2,7 +2,6 @@ package io.github.hostadam.config.locale;
 
 import io.github.hostadam.config.ConfigFile;
 import io.github.hostadam.config.locale.performance.CachedComponent;
-import io.github.hostadam.config.locale.performance.ParsedComponent;
 import io.github.hostadam.utilities.PaperUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
@@ -57,53 +56,34 @@ public class LanguageFile extends ConfigFile {
         }
     }
 
-    private ParsedComponent parseComponent(String string) {
-        List<Component> components = new ArrayList<>();
-        List<String> placeholders = new ArrayList<>();
-
-        int index = 0;
-        Matcher matcher = PLACEHOLDER_PATTERN.matcher(string);
-
-        while(matcher.find()) {
-            String before = string.substring(index, matcher.start());
-            if(!before.isEmpty()) {
-                components.add(PaperUtils.stringToComponent(before));
-            }
-
-            String key = matcher.group(1);
-            placeholders.add(key);
-            components.add(Component.text("PLACEHOLDER:" + key));
-
-            index = matcher.end();
-        }
-
-        if(index < string.length()) components.add(PaperUtils.stringToComponent(string.substring(index)));
-        return new ParsedComponent(components, placeholders);
-    }
-
     private CachedComponent parseList(List<String> list) {
         if(list.isEmpty()) return null;
 
         List<Component> components = new ArrayList<>();
-        List<String> placeholders = new ArrayList<>();
+        boolean hasPlaceholders = false;
 
         for(String string : list) {
-            ParsedComponent component = this.parseComponent(string);
-            components.addAll(component.parts());
-            placeholders.addAll(component.placeholders());
+            Matcher matcher = PLACEHOLDER_PATTERN.matcher(string);
+            if(matcher.find()) {
+                hasPlaceholders = true;
+            }
+
+            components.add(PaperUtils.stringToComponent(string));
         }
 
         Component joinedComponent = Component.join(JoinConfiguration.separator(Component.newline()), components);
         boolean needsExtraRoundtrip = hasInnerPlaceholders(joinedComponent);
-        return new CachedComponent(joinedComponent, placeholders, needsExtraRoundtrip);
+        return new CachedComponent(joinedComponent, hasPlaceholders, needsExtraRoundtrip);
     }
 
     private CachedComponent parseMessage(String miniMessageString) {
         if(miniMessageString == null || miniMessageString.isEmpty()) return null;
-        ParsedComponent parsedComponent = this.parseComponent(miniMessageString);
-        Component component = Component.join(JoinConfiguration.noSeparators(), parsedComponent.parts());
+        Matcher matcher = PLACEHOLDER_PATTERN.matcher(miniMessageString);
+        boolean hasPlaceholder = matcher.find();
+
+        Component component = PaperUtils.stringToComponent(miniMessageString);
         boolean needsExtraRoundtrip = hasInnerPlaceholders(component);
-        return new CachedComponent(component, parsedComponent.placeholders(), needsExtraRoundtrip);
+        return new CachedComponent(component, hasPlaceholder, needsExtraRoundtrip);
     }
 
     public Component resolve(String key, PlaceholderProvider provider) {
@@ -113,49 +93,39 @@ public class LanguageFile extends ConfigFile {
     }
 
     private Component getComponent(PlaceholderProvider provider, CachedComponent cache) {
-        if(!cache.hasPlaceholders()) return cache.component();
-        Component result = replacePlaceholders(cache.component(), cache.placeholders(), provider);
-        return cache.needsExtraRoundtrip() ? this.recursiveResolving(result, provider) : result;
-    }
-
-    private Component replacePlaceholders(Component component, List<String> placeholders, PlaceholderProvider provider) {
-        Component current = component;
-        for(String key : placeholders) {
-            Component value = provider.get(key);
-            if(value == null) value = Component.text("{" + key + "}");
-            current = replacePlaceholderMarker(current, key, value);
+        Component component = cache.component();
+        if(!cache.containsPlaceholders()) {
+            return component;
         }
 
-        return current;
-    }
+        component = component.replaceText(builder -> builder
+                .match(PLACEHOLDER_PATTERN)
+                .replacement((matchResult, builder1) -> {
+                    String key = matchResult.group(1);
+                    Component value = provider.get(key);
+                    return value != null ? value : Component.text(matchResult.group());
+                })
+        );
 
-    private Component replacePlaceholderMarker(Component component, String key, Component replacement) {
-        if(component instanceof TextComponent text) {
-            if(text.content().equals("PLACEHOLDER:" + key)) return replacement;
-            return text;
-        }
-
-        if(component.children().isEmpty()) return component;
-
-        List<Component> newChildren = component.children().stream()
-                .map(child -> replacePlaceholderMarker(child, key, replacement))
-                .toList();
-
-        return component.children(newChildren);
+        return cache.needsExtraRoundtrip() ? this.recursiveResolving(component, provider) : component;
     }
 
     private Component recursiveResolving(Component component, PlaceholderProvider provider) {
         ClickEvent clickEvent = component.clickEvent();
-        if (clickEvent != null && clickEvent.payload() instanceof ClickEvent.Payload.Text text) {
+        if(clickEvent != null && clickEvent.payload() instanceof ClickEvent.Payload.Text text) {
             String value = text.value();
-            for (String key : cachedComponents.keySet()) {
-                Component replacement = provider.get(key);
-                if (replacement instanceof TextComponent tc && value.contains("{" + key + "}")) {
-                    value = value.replace("{" + key + "}", tc.content());
-                }
+            Matcher matcher = PLACEHOLDER_PATTERN.matcher(value);
+            if(matcher.find()) {
+                String replacedValue = matcher.replaceAll(matchResult -> {
+                    String key = matchResult.group(1);
+                    Component replacement = provider.get(key);
+                    return replacement instanceof TextComponent textComponent ? textComponent.content() : matchResult.group();
+                });
+
+                return component.clickEvent(ClickEvent.clickEvent(clickEvent.action(), replacedValue));
             }
-            return component.clickEvent(ClickEvent.clickEvent(clickEvent.action(), value));
         }
+
         return component;
     }
 
