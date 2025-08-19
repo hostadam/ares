@@ -1,0 +1,74 @@
+menu-items:
+  border:
+    type: NORMAL
+    menu-char: "#"
+    item:
+      material: "BARRIER"
+      tooltip: false
+      components:
+        custom-model-data:
+          floats:
+            - 3
+  empty:
+    type: NORMAL
+    item:
+      material: "BARRIER"
+      tooltip: false
+      components:
+        custom-model-data:
+          floats:
+            - 3
+  previous:
+    type: "PREVIOUS_PAGE"
+    item:
+      material: "BARRIER"
+      components:
+        custom-model-data:
+          floats:
+            - 5
+      name: "<red>Previous Page</red>"
+      lore:
+        - "<color:#A0A0A0>Click to go the previous page.</color>"
+    fallbackItem:
+      material: "BARRIER"
+      tooltip: false
+      components:
+        custom-model-data:
+          floats:
+            - 3
+  next:
+    type: "NEXT_PAGE"
+    item:
+      material: "BARRIER"
+      components:
+        custom-model-data:
+          floats:
+            - 6
+      name: "<green>Next Page</green>"
+      lore:
+        - "<color:#A0A0A0>Click to go the next page.</color>"
+    fallbackItem:
+      material: "BARRIER"
+      tooltip: false
+      components:
+        custom-model-data:
+          floats:
+            - 3
+  parent:
+    type: "BACK_TO_MAIN_PAGE"
+    item:
+      material: "BARRIER"
+      components:
+        custom-model-data:
+          floats:
+            - 3
+      name: "<red>Exit</red>"
+      lore:
+        - "<color:#A0A0A0>Click to exit to the previous menu.</color>"
+    fallbackItem:
+      material: "BARRIER"
+      tooltip: false
+      components:
+        custom-model-data:
+          floats:
+            - 3
