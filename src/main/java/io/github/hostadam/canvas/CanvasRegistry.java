@@ -4,7 +4,10 @@ import io.github.hostadam.canvas.block.CanvasBlock;
 import io.github.hostadam.canvas.block.types.BlockType;
 import io.github.hostadam.canvas.block.types.MultiFacingType;
 import io.github.hostadam.canvas.block.types.NoteBlockType;
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
@@ -33,7 +36,7 @@ public class CanvasRegistry {
     }
 
     public Optional<CanvasBlock> getByBlock(Block block) {
-        if(block.getType() != Material.NOTE_BLOCK && block.getType() != Material.MUSHROOM_STEM && block.getType() != Material.CHORUS_PLANT) {
+        if(!this.registeredBlockTypes.contains(block.getType())) {
             return Optional.empty();
         }
 
@@ -42,6 +45,6 @@ public class CanvasRegistry {
 
     public Optional<CanvasBlock> getByItem(ItemStack bukkitItem) {
         if(bukkitItem == null || bukkitItem.getType() == Material.AIR) return Optional.empty();
-        return this.blocks.stream().filter(canvasBlock -> canvasBlock.getItemStack().matchesWithoutData(bukkitItem, Set.of())).findAny();
+        return this.blocks.stream().filter(canvasBlock -> canvasBlock.getItemStack().isSimilar(bukkitItem)).findAny();
     }
 }

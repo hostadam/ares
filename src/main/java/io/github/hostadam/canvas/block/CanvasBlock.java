@@ -2,10 +2,13 @@ package io.github.hostadam.canvas.block;
 
 import io.github.hostadam.canvas.block.types.BlockType;
 import io.github.hostadam.utilities.item.ItemParser;
+import io.papermc.paper.datacomponent.DataComponentType;
 import lombok.Getter;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.function.Predicate;
 
 @Getter
 public class CanvasBlock {
@@ -22,7 +25,9 @@ public class CanvasBlock {
     }
 
     public ItemStack getItemStack() {
-        return this.itemStack.clone();
+        ItemStack cloned = this.itemStack.clone();
+        cloned.copyDataFrom(this.itemStack, dataComponentType -> true);
+        return cloned;
     }
 
     public void apply(Block block) {

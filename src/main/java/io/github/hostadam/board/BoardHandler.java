@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public class BoardHandler {
 
-    @NonNull
+    @NonNull @Getter
     private final AresImpl ares;
     @Getter
     private BoardSettings settings;
@@ -72,7 +72,7 @@ public class BoardHandler {
         } else if(this.updateTask == null && !empty && this.settings.hasStyle()) {
             this.updateTask = Bukkit.getScheduler().runTaskTimer(this.ares, () -> {
                 for(Board board : this.boards.values()) {
-                    if(board.shouldTick()) board.update();
+                    if(board.shouldTick()) board.update(this.settings);
                 }
             }, interval, interval);
         }

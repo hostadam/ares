@@ -33,7 +33,7 @@ public class BlockEvents implements Listener {
         Optional<CanvasBlock> optional = this.ares.canvas().getByItem(itemStack);
         optional.ifPresentOrElse(canvasBlock -> {
             canvasBlock.apply(block);
-            new TexturedBlockBreakEvent(canvasBlock, block).callEvent();
+            new TexturedBlockPlaceEvent(canvasBlock, block).callEvent();
         }, () -> {
             CanvasRegistry canvas = this.ares.canvas();
             if(canvas.shouldCancelPlacement(itemStack.getType())) {
@@ -47,23 +47,14 @@ public class BlockEvents implements Listener {
         if(event.isCancelled()) return;
         Block block = event.getBlock();
         Optional<CanvasBlock> optional = this.ares.canvas().getByBlock(block);
-        optional.ifPresent(canvasBlock -> new TexturedBlockPlaceEvent(canvasBlock, block).callEvent());
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onBlockDrop(BlockDropItemEvent event) {
-        if(event.isCancelled()) return;
-        Block block = event.getBlock();
-        Optional<CanvasBlock> optional = this.ares.canvas().getByBlock(block);
         optional.ifPresent(canvasBlock -> {
-            event.setCancelled(true);
-
-            World world = block.getWorld();
-            Location location = block.getLocation();
+            event.setDropItems(false);
 
             if(canvasBlock.isDropItem()) {
-                world.dropItemNaturally(location, canvasBlock.getItemStack());
+                block.getWorld().dropItem(block.getLocation(), canvasBlock.getItemStack());
             }
+
+            new TexturedBlockBreakEvent(canvasBlock, block).callEvent();
         });
     }
 

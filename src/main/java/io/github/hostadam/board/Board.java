@@ -32,24 +32,26 @@ public class Board {
     public void construct() {
         this.updateVisibility(true);
         player.setScoreboard(this.scoreboard);
+        this.lastUpdatedTitleTick = this.lastUpdatedTabTick = 0;
     }
 
     public void updateVisibility(boolean visible) {
         this.objective.setVisible(visible);
+        this.lastUpdatedTitleTick = this.lastUpdatedTabTick = 0;
     }
 
     public void destroy() {
         if(this.scoreboard == null) return;
         this.scoreboard.getTeams().forEach(Team::unregister);
         this.scoreboard.getObjectives().forEach(Objective::unregister);
+        this.lastUpdatedTitleTick = this.lastUpdatedTabTick = 0;
         this.scoreboard = null;
     }
 
     private int lastUpdatedTitleTick = 0, lastUpdatedTabTick = 0;
 
-    public void update() {
+    public void update(BoardSettings settings) {
         if(this.scoreboard == null) return;
-        BoardSettings settings = this.boardHandler.getSettings();
         BoardStyle style = settings.getStyle();
 
         if(settings.shouldUpdateTitle(this.lastUpdatedTitleTick++)) {
@@ -62,6 +64,8 @@ public class Board {
             if(footer != null) this.player.sendPlayerListFooter(footer);
         }
 
-        this.objective.applyChanges(style.lines(player), settings);
+        if(style.shouldUpdateLines(player)) {
+            this.objective.applyChanges(style.lines(player), settings);
+        }
     }
 }

@@ -2,6 +2,7 @@ package io.github.hostadam;
 
 import io.github.hostadam.api.ChatInput;
 import io.github.hostadam.api.Selection;
+import io.github.hostadam.api.events.PlayerModifyInventoryEvent;
 import io.github.hostadam.api.handler.Handler;
 import io.github.hostadam.api.menu.Menu;
 import io.github.hostadam.utilities.PaperUtils;
@@ -9,15 +10,19 @@ import io.papermc.paper.event.player.AsyncChatEvent;
 import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.server.PluginDisableEvent;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -73,6 +78,71 @@ public class AresListeners implements Listener {
         int slot = event.getRawSlot();
         if (slot == -1) return;
         Menu.get(player).ifPresent(menu -> menu.click(event));
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInventoryClick(InventoryClickEvent event) {
+        if(event.isCancelled()) return;
+        if(event.getAction() == InventoryAction.NOTHING) return;
+
+        InventoryView view = event.getView();
+        ItemStack clicked = event.getCurrentItem();
+        ItemStack cursor = event.getCursor();
+
+        boolean doesCursorExist = !cursor.isEmpty();
+        boolean doesClickedExist = clicked != null && !clicked.isEmpty();
+        boolean wasTopGuiAffected = event.getClickedInventory() == view.getTopInventory();
+
+        PlayerModifyInventoryEvent.InventoryModification modification;
+        int affectedSlot = event.getRawSlot();
+
+        switch (event.getAction()) {
+            case PICKUP_ALL, PICKUP_SOME, PICKUP_HALF, PICKUP_ONE, PICKUP_FROM_BUNDLE, PICKUP_ALL_INTO_BUNDLE, PICKUP_SOME_INTO_BUNDLE, DROP_ONE_SLOT, DROP_ALL_SLOT -> {
+                if(!wasTopGuiAffected || !doesClickedExist) return;
+                modification = PlayerModifyInventoryEvent.InventoryModification.REMOVED;
+            }
+            case PLACE_ALL, PLACE_SOME, PLACE_ONE, PLACE_FROM_BUNDLE -> {
+                if(!wasTopGuiAffected || !doesCursorExist) return;
+                modification = PlayerModifyInventoryEvent.InventoryModification.ADDED;
+            }
+            case SWAP_WITH_CURSOR -> {
+                if(!wasTopGuiAffected || !doesClickedExist || !doesCursorExist) return;
+                modification = PlayerModifyInventoryEvent.InventoryModification.REPLACED;
+            }
+            case MOVE_TO_OTHER_INVENTORY -> {
+                if(!doesClickedExist) return;
+                modification = wasTopGuiAffected ? PlayerModifyInventoryEvent.InventoryModification.REMOVED : PlayerModifyInventoryEvent.InventoryModification.ADDED;
+                affectedSlot = wasTopGuiAffected ? event.getRawSlot() : -1;
+            }
+            case COLLECT_TO_CURSOR -> {
+                if(!doesCursorExist) return;
+                modification = (wasTopGuiAffected ? PlayerModifyInventoryEvent.InventoryModification.ADDED : PlayerModifyInventoryEvent.InventoryModification.REMOVED);
+                affectedSlot = -1;
+            }
+            case HOTBAR_SWAP -> {
+                if(!wasTopGuiAffected) return;
+                modification = doesClickedExist ? PlayerModifyInventoryEvent.InventoryModification.REMOVED : PlayerModifyInventoryEvent.InventoryModification.ADDED;
+            }
+            default -> {
+                return;
+            }
+        }
+
+        if(!new PlayerModifyInventoryEvent(view, (Player) event.getWhoClicked(), modification, affectedSlot).callEvent()) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onDrag(InventoryDragEvent event) {
+        InventoryView view = event.getView();
+        Player player = (Player) event.getWhoClicked();
+        int size = view.getTopInventory().getSize();
+
+        for(int slot : event.getRawSlots()) {
+            if(slot >= size) continue;
+            new PlayerModifyInventoryEvent(view, player, PlayerModifyInventoryEvent.InventoryModification.ADDED, slot).callEvent();
+        }
     }
 
     @EventHandler(ignoreCancelled = true)

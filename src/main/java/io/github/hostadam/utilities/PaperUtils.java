@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 public class PaperUtils {
 
-    private static final MiniMessage MINI = MiniMessage.builder()
+    public static final MiniMessage MINI = MiniMessage.builder()
             .tags(TagResolver.builder().resolvers(StandardTags.defaults(),
                     /*StandardTags.hoverEvent(),
                     StandardTags.reset(),

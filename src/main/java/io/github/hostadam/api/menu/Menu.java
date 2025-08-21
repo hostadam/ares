@@ -60,22 +60,21 @@ public abstract class Menu<T extends JavaPlugin> {
     public void open() {
         if(this.layout == null) return;
 
-        Menu<?> menu = OPEN_MENUS.get(player.getUniqueId());
+        Menu<?> menu = OPEN_MENUS.remove(player.getUniqueId());
         if(menu != null && !menu.getClass().isInstance(this)) {
             this.parent = menu;
-            menu.close();
         }
 
         this.page = 0;
         this.render();
-
-        OPEN_MENUS.put(player.getUniqueId(), this);
 
         if(!Bukkit.isPrimaryThread()) {
             Bukkit.getScheduler().runTask(this.owningPlugin, () -> this.player.openInventory(this.inventory));
         } else {
             this.player.openInventory(this.inventory);
         }
+
+        OPEN_MENUS.put(player.getUniqueId(), this);
     }
 
     public void render() {
@@ -138,7 +137,6 @@ public abstract class Menu<T extends JavaPlugin> {
     public void close() {
         if(player == null) return;
         player.closeInventory(InventoryCloseEvent.Reason.PLUGIN);
-        OPEN_MENUS.remove(player.getUniqueId());
     }
 
     public void handleClose() {
