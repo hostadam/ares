@@ -145,6 +145,11 @@ public class ItemBuilder {
         return this;
     }
 
+    public ItemBuilder maxDurability(int durability) {
+        this.itemStack.setData(DataComponentTypes.MAX_DAMAGE, durability);
+        return this;
+    }
+
     public ItemBuilder tooltip(boolean tooltip) {
         if(tooltip) {
             this.itemStack.unsetData(DataComponentTypes.TOOLTIP_DISPLAY);

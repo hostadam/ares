@@ -82,6 +82,10 @@ public class ItemParser {
             builder.name(section.getString("name"));
         }
 
+        if(section.contains("max-durability")) {
+            builder.maxDurability(section.getInt("max-durability"));
+        }
+
         if(section.contains("enchantments")) {
             for(String key : section.getConfigurationSection("enchantments").getKeys(false)) {
                 Enchantment enchantment = Enchantment.getByName(key.toUpperCase());
@@ -250,7 +254,7 @@ public class ItemParser {
                 .animation(ItemUseAnimation.valueOf(section.getString("animation", "EAT")))
                 .consumeSeconds((float) section.getDouble("consume-seconds", consumable != null ? consumable.consumeSeconds() : 0.0d))
                 .hasConsumeParticles(section.getBoolean("has-consume-particles", consumable != null && consumable.hasConsumeParticles()))
-                .sound(PaperUtils.key(section.getString("key")).orElse(SoundEventKeys.ENTITY_GENERIC_EAT));
+                .sound(PaperUtils.key(section.getString("sound")).orElse(SoundEventKeys.ENTITY_GENERIC_EAT));
 
         if(section.contains("effects")) {
             ConfigurationSection effectSection = section.getConfigurationSection("effects");
@@ -332,8 +336,8 @@ public class ItemParser {
                 .swappable(section.getBoolean("swappable", equippable != null && equippable.swappable()))
                 .canBeSheared(section.getBoolean("can-be-sheared", equippable != null && equippable.canBeSheared()))
                 .equipOnInteract(section.getBoolean("equip-on-interact", equippable != null && equippable.equipOnInteract()))
-                .assetId(PaperUtils.key(section.getString("asset-id")).orElse(equippable != null ? equippable.equipSound() : null))
-                .cameraOverlay(PaperUtils.key(section.getString("camera-overlay")).orElse(equippable != null ? equippable.equipSound() : null))
+                .assetId(PaperUtils.key(section.getString("asset-id")).orElse(equippable != null ? equippable.assetId() : null))
+                .cameraOverlay(PaperUtils.key(section.getString("camera-overlay")).orElse(equippable != null ? equippable.cameraOverlay() : null))
                 .equipSound(PaperUtils.key(section.getString("equip-sound")).orElse(equippable != null ? equippable.equipSound() : SoundEventKeys.ITEM_ARMOR_EQUIP_GENERIC));
 
         if(section.contains("allowed-entities")) {

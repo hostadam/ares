@@ -6,22 +6,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
 @Getter
 public abstract class Handler<T extends JavaPlugin> {
 
-    private static final AtomicInteger READY = new AtomicInteger(0);
     protected final T reference;
 
     public Handler(@NotNull T reference) {
         this.reference = reference;
-    }
-
-    public void markReady() {
-        READY.incrementAndGet();
     }
 
     public void cleanup() {
@@ -48,10 +42,6 @@ public abstract class Handler<T extends JavaPlugin> {
         this.reference.getLogger().log(Level.INFO, logMessage, throwable);
     }
 
-    public abstract void enable();
-    public abstract void disable();
-
-    public static boolean allHandlersReady(int expectedCount) {
-        return READY.get() >= expectedCount;
-    }
+    public void enable() {}
+    public void disable() {}
 }

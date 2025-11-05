@@ -87,11 +87,8 @@ public class AresImpl extends JavaPlugin implements Ares {
         }
     }
 
-    public boolean isServerReady() {
-        return Handler.allHandlersReady(this.handlers.size());
-    }
-
-    public List<Handler<?>> getAndRemoveHandlers(Plugin plugin) {
+    @Override
+    public List<Handler<?>> unregisterHandlers(Plugin plugin) {
         List<Handler<?>> handlerList = this.handlers.remove(plugin);
         if(handlerList == null || handlerList.isEmpty()) return null;
         return new ArrayList<>(handlerList).reversed();

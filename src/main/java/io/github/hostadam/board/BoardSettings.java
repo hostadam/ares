@@ -3,10 +3,12 @@ package io.github.hostadam.board;
 import io.github.hostadam.api.BoardStyle;
 import io.papermc.paper.scoreboard.numbers.NumberFormat;
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 @Getter
 public class BoardSettings {
@@ -16,9 +18,23 @@ public class BoardSettings {
     private Integer titleInterval = null;
     private BoardStyle style;
     private NumberFormat scoreFormat = NumberFormat.noStyle();
+
+    private Supplier<Component> titleSupplier, tabHeaderSupplier, tabFooterSupplier;
     private Function<Player, Integer> tabListOrdering;
 
     public BoardSettings() {}
+
+    public Component getTitle() {
+        return this.titleSupplier != null ? this.titleSupplier.get() : null;
+    }
+
+    public Component getTabHeader() {
+        return this.tabHeaderSupplier != null ? this.tabHeaderSupplier.get() : null;
+    }
+
+    public Component getTabFooter() {
+        return this.tabFooterSupplier != null ? this.tabFooterSupplier.get() : null;
+    }
 
     public BoardSettings scoreFormat(@NotNull NumberFormat format) {
         this.scoreFormat = format;
@@ -52,6 +68,21 @@ public class BoardSettings {
 
     public BoardSettings style(BoardStyle style) {
         this.style = style;
+        return this;
+    }
+
+    public BoardSettings titleSupplier(Supplier<Component> supplier) {
+        this.titleSupplier = supplier;
+        return this;
+    }
+
+    public BoardSettings tabHeaderSupplier(Supplier<Component> supplier) {
+        this.tabHeaderSupplier = supplier;
+        return this;
+    }
+
+    public BoardSettings tabFooterSupplier(Supplier<Component> supplier) {
+        this.tabFooterSupplier = supplier;
         return this;
     }
 

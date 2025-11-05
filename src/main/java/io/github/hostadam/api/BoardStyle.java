@@ -11,8 +11,5 @@ public interface BoardStyle {
         return true;
     }
 
-    Component title(Player player);
-    Component header(Player player);
-    Component footer(Player player);
     List<Component> lines(Player player);
 }

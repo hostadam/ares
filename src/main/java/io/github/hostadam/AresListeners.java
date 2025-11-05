@@ -3,14 +3,12 @@ package io.github.hostadam;
 import io.github.hostadam.api.ChatInput;
 import io.github.hostadam.api.Selection;
 import io.github.hostadam.api.events.PlayerModifyInventoryEvent;
-import io.github.hostadam.api.handler.Handler;
 import io.github.hostadam.api.menu.Menu;
 import io.github.hostadam.utilities.PaperUtils;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -20,37 +18,17 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.player.*;
-import org.bukkit.event.server.PluginDisableEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.List;
-import java.util.logging.Level;
 
 @AllArgsConstructor
 public class AresListeners implements Listener {
 
-    private final Component textNotReady = Component.text("The server is not ready yet.", NamedTextColor.RED);
     private final AresImpl plugin;
-
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onDisable(PluginDisableEvent event) {
-        List<Handler<?>> handlers = this.plugin.getAndRemoveHandlers(event.getPlugin());
-        if(handlers == null) return;
-        for(Handler<?> handler : handlers) {
-            handler.disable();
-            this.plugin.getLogger().log(Level.INFO, "Plugin shutdown: disabling " + handler.getClass().getName());
-        }
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onAsyncJoin(AsyncPlayerPreLoginEvent event) {
-        if (!this.plugin.isServerReady()) {
-            event.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
-            event.kickMessage(textNotReady);
-        }
-    }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {

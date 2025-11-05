@@ -61,8 +61,35 @@ public class TimeUtils {
         return !sb.isEmpty() ? sb.toString() : "0s";
     }
 
+    public static String formatSimple(long duration, boolean compact) {
+        if (duration == Long.MAX_VALUE) return "Permanent";
+        long seconds = duration / 1000;
+        long mins = seconds / 60; seconds %= 60;
+        long hrs = mins / 60; mins %= 60;
+        long days = hrs / 24; hrs %= 24;
+
+        StringBuilder sb = new StringBuilder();
+        if(days > 0) {
+            append(sb, days, compact, "d", "day");
+        }
+
+        if(hrs > 0) {
+            append(sb, hrs, compact, "h", "hour");
+        }
+
+        if(mins > 0 && (days <= 0 || hrs <= 0)) {
+            append(sb, mins, compact, "m", "minute");
+        }
+
+        if(seconds > 0 && (days <= 0 && hrs <= 0 && mins <= 0)) {
+            append(sb, seconds, compact, "s", "second");
+        }
+
+        return !sb.isEmpty() ? sb.toString() : "0s";
+    }
+
     public static String format(long duration) {
-        return format(duration, true);
+        return format(duration, false);
     }
 
     private static void append(StringBuilder builder, long amount, boolean compact, String compactString, String nonCompactString) {

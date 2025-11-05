@@ -3,9 +3,11 @@ package io.github.hostadam.config;
 import io.github.hostadam.api.menu.MenuLayout;
 import io.github.hostadam.utilities.PaperUtils;
 import io.github.hostadam.utilities.StringUtils;
+import io.github.hostadam.utilities.item.ItemBuilder;
 import io.github.hostadam.utilities.item.ItemParser;
 import io.github.hostadam.utilities.world.SafeLocation;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.title.Title;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
@@ -63,6 +65,16 @@ public class ConfigRegistry {
         this.deserializerFor(Component.class, (file, path) -> PaperUtils.stringToComponent(file.getString(path)));
         this.deserializerFor(Date.class, (file, path) -> StringUtils.fetchDate(file.getString(path)));
 
+        this.deserializerFor(Title.class, (file, path) -> {
+            ConfigurationSection section = file.getConfigurationSection(path);
+            if(section == null) return null;
+
+            Component title = PaperUtils.stringToComponent(section.getString("title"));
+            Component subTitle = PaperUtils.stringToComponent(section.getString("sub-title"));
+            int fadeIn = section.getInt("fade-in", 0), stay = section.getInt("duration", 20), fadeOut = section.getInt("fade-out", 0);
+            return Title.title(title, subTitle, fadeIn, stay, fadeOut);
+        });
+
         this.deserializerFor(SafeLocation.class, (file, path) -> {
             String value = file.getString(path);
             return value != null ? new SafeLocation(value) : null;
@@ -73,6 +85,13 @@ public class ConfigRegistry {
             if(section == null) return null;
 
             return ItemParser.parse(section).build();
+        });
+
+        this.deserializerFor(ItemBuilder.class, (file, path) -> {
+            ConfigurationSection section = file.getConfigurationSection(path);
+            if(section == null) return null;
+
+            return ItemParser.parse(section);
         });
 
         this.deserializerFor(MenuLayout.class, (file, path) -> {
