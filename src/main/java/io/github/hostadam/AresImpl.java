@@ -40,7 +40,6 @@ public class AresImpl extends JavaPlugin implements Ares {
 
     private final Map<UUID, Selection> selections = new HashMap<>();
     private final Map<UUID, ChatInput> chatInputs = new ConcurrentHashMap<>();
-    private final Map<Plugin, List<Handler<?>>> handlers = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -60,12 +59,6 @@ public class AresImpl extends JavaPlugin implements Ares {
         this.getServer().getPluginManager().registerEvents(new BlockEvents(this), this);
 
         this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
-        this.task = this.getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
-            for(List<Handler<?>> handlerList : this.handlers.values()) {
-                handlerList.forEach(Handler::cleanup);
-            }
-        }, 18000, 18000);
-
         this.getServer().getServicesManager().register(Ares.class, this, this, ServicePriority.Normal);
     }
 
@@ -85,13 +78,6 @@ public class AresImpl extends JavaPlugin implements Ares {
                 this.predefinedMenuItems.put(key.toLowerCase(), menuItem);
             }
         }
-    }
-
-    @Override
-    public List<Handler<?>> unregisterHandlers(Plugin plugin) {
-        List<Handler<?>> handlerList = this.handlers.remove(plugin);
-        if(handlerList == null || handlerList.isEmpty()) return null;
-        return new ArrayList<>(handlerList).reversed();
     }
 
     public ChatInput getChatInput(Player player) {
@@ -145,15 +131,6 @@ public class AresImpl extends JavaPlugin implements Ares {
     @Override
     public Collection<MenuItem> getAllPredefinedMenuItems() {
         return this.predefinedMenuItems.values();
-    }
-
-    @Override
-    public void registerHandler(JavaPlugin owner, Handler<?> handler) {
-        long now = System.currentTimeMillis();
-        getLogger().log(Level.INFO, "Loading " + handler.getClass().getName());
-        this.handlers.computeIfAbsent(owner, k -> new ArrayList<>()).add(handler);
-        handler.enable();
-        getLogger().log(Level.INFO, "Loaded " + handler.getClass().getName() + ", took " + (System.currentTimeMillis() - now) + " ms");
     }
 
     @Override

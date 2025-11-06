@@ -96,7 +96,7 @@ public class AresCommandData {
         try {
             method.invoke(this.commandInstance, context);
         } catch (InvocationTargetException exception) {
-            if(exception.getCause() instanceof CommandExecutionException || this.handler.isDebugMode()) exception.printStackTrace();
+            if(exception.getCause() instanceof CommandExecutionException && this.handler.isDebugMode()) exception.printStackTrace();
         } catch (Exception exception) {
             exception.printStackTrace();
         }

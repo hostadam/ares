@@ -21,7 +21,7 @@ import java.util.logging.Level;
 
 public class CommandRegistry {
 
-    private @Getter @Setter boolean debugMode = true;
+    private @Getter @Setter boolean debugMode = false;
 
     private CommandMap commandMap;
     private final CommandContextHelper contextHelper;

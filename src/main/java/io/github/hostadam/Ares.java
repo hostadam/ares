@@ -25,9 +25,6 @@ public interface Ares {
     BoardHandler scoreboard();
     CommandRegistry commands();
     CanvasRegistry canvas();
-
-    List<Handler<?>> unregisterHandlers(Plugin plugin);
-    void registerHandler(JavaPlugin owner, Handler<?> handler);
     void startChatInput(Player player, ChatInput input);
     void startSelection(Player player, Selection selection);
     MenuItem getPredefinedMenuItem(String name);

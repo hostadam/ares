@@ -39,6 +39,9 @@ public class BoardHandler {
             Board board = this.boards.computeIfAbsent(player.getUniqueId(), k -> new Board(player));
             board.construct();
             this.checkUpdateTask(false);
+
+            board.updateLines(settings);
+            board.updateTitleAndTab(settings.getTitle(), settings.getTabHeader(), settings.getTabFooter());
         }
 
         this.refreshPlayerOnTab(player);
@@ -83,7 +86,6 @@ public class BoardHandler {
 
     private void tickAll() {
         Component title = settings.shouldUpdateTitle(this.lastUpdatedTitleTick++) ? settings.getTitle() : null;
-
         boolean updateTab = settings.shouldUpdateTab(this.lastUpdatedTabTick++);
         Component tabHeader = updateTab ? settings.getTabHeader() : null;
         Component tabFooter = updateTab ? settings.getTabFooter() : null;
