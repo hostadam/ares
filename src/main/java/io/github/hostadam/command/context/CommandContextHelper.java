@@ -3,6 +3,7 @@ package io.github.hostadam.command.context;
 import io.github.hostadam.api.command.ParameterArgParser;
 import io.github.hostadam.api.command.tabcompletion.ParameterTabCompleter;
 import io.github.hostadam.utilities.PlayerUtils;
+import io.github.hostadam.utilities.StringUtils;
 import io.github.hostadam.utilities.TimeUtils;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Floats;
@@ -19,6 +20,7 @@ import org.bukkit.entity.Player;
 import org.intellij.lang.annotations.Subst;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,6 +46,7 @@ public class CommandContextHelper {
         this.registerParser(GameMode.class, arg -> parseEnum(GameMode.class, arg));
         this.registerParser(EntityType.class, arg -> parseEnum(EntityType.class, arg));
 
+        this.registerParser(Date.class, arg -> Optional.ofNullable(StringUtils.fetchDate(arg)));
         this.registerParser(World.class, arg -> Optional.ofNullable(Bukkit.getWorld(arg)));
         this.registerParser(Player.class, arg -> Optional.ofNullable(Bukkit.getPlayer(arg)));
         this.registerParser(OfflinePlayer.class, arg -> Optional.ofNullable(PlayerUtils.getOfflinePlayer(arg)));

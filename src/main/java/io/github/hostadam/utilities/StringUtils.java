@@ -18,7 +18,7 @@ public class StringUtils {
     public static final char BOX = '⬛';
     private static final Pattern PUA_PATTERN = Pattern.compile("[\uE000-\uF8FF]|[\uDB80-\uDBBF][\uDC00-\uDFFF]|[\uDBC0-\uDBFF][\uDC00-\uDFFF]");
     private static final Pattern ALPHANUMERIC_PATTERN = Pattern.compile("\\p{Alnum}+");
-    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.#");
+    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.##");
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final Map<Character, Character> DIGIT_MAPPER = Map.of('0', 'o', '1', 'i', '2', 'z', '3', 'e', '4', 'a', '5', 's', '6', 'g', '7', 't', '8', 'b', '9', 'p');
 
