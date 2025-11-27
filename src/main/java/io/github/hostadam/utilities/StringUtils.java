@@ -70,7 +70,7 @@ public class StringUtils {
         } else if(value >= 1000000.0) {
             return DECIMAL_FORMAT.format(value / 1000000.0) + "M";
         } else if(value >= 1000.0) {
-            return DECIMAL_FORMAT.format(value / 1000.0) + "M";
+            return DECIMAL_FORMAT.format(value / 1000.0) + "k";
         } else {
             return value % 1 == 0 ? Integer.toString((int) value) : DECIMAL_FORMAT.format(value);
         }

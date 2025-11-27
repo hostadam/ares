@@ -1,8 +1,10 @@
 package io.github.hostadam.utilities.item;
 
+import io.github.hostadam.utilities.PaperUtils;
 import io.github.hostadam.utilities.PlayerUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -13,11 +15,11 @@ import org.bukkit.inventory.ItemStack;
 public class ProbableItem {
 
     private double chance;
-    private String description;
+    private Component description;
     private ItemStack item;
     private String command;
 
-    public ProbableItem(double chance, String description, ItemStack item) {
+    public ProbableItem(double chance, Component description, ItemStack item) {
         this(chance, description, item, null);
     }
 
@@ -25,7 +27,7 @@ public class ProbableItem {
         this(chance, null, item, null);
     }
 
-    public ProbableItem(double chance, String description, String command) {
+    public ProbableItem(double chance, Component description, String command) {
         this(chance, description, null, command);
     }
 
@@ -35,7 +37,7 @@ public class ProbableItem {
 
     public ProbableItem(ConfigurationSection section) {
         this.chance = section.getDouble("chance");
-        if(section.contains("description")) this.description = section.getString("description");
+        if(section.contains("description")) this.description = PaperUtils.stringToComponent(section.getString("description"));
         if(section.contains("item")) this.item = ItemParser.parse(section.getConfigurationSection("item")).build();
         if(section.contains("command")) this.command = section.getString("command");
     }
