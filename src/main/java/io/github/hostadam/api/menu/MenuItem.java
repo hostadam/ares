@@ -46,7 +46,11 @@ public class MenuItem {
         }
 
         if(section.contains("item")) {
-            this.itemStack = ItemParser.parse(section.getConfigurationSection("item"));
+            try {
+                this.itemStack = ItemParser.parse(section.getConfigurationSection("item"));
+            } catch (IllegalArgumentException exception) {
+                throw new IllegalArgumentException("ItemStack parsing issue in " + section.getCurrentPath());
+            }
         }
 
         if(section.contains("permission")) {

@@ -1,6 +1,6 @@
 name: "Ares"
-version: "1.4.4"
+version: "1.5.0"
 author: Hostadam
 description: "Ares primarily provides logic, framework and utilities for other plugins."
-main: io.github.hostadam.AresImpl
+main: io.github.hostadam.implementation.AresImpl
 api-version: "1.21"

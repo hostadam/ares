@@ -1,9 +1,10 @@
 package io.github.hostadam.command.context;
 
-import io.github.hostadam.command.AresCommandData;
+import io.github.hostadam.command.impl.CommandData;
+import io.github.hostadam.command.AresCommandException;
+import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -13,42 +14,30 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+@AllArgsConstructor
 public class CommandContext {
 
-    private static final Component CONSOLE = Component.text("CONSOLE", NamedTextColor.RED);
-
-    private final CommandContextHelper helper;
-    private final AresCommandData command;
+    private final CommandContextRegistry registry;
+    private final CommandData command;
     private final CommandSender commandSender;
     private final String[] arguments;
 
-    public CommandContext(CommandContextHelper helper, AresCommandData command, CommandSender sender, String[] arguments) {
-        this.helper = helper;
-        this.command = command;
-        this.commandSender = sender;
-        this.arguments = arguments;
-    }
-
     public String[] getRawArguments() {
         return Arrays.copyOf(this.arguments, this.arguments.length);
-    }
-
-    public void response(Component message) {
-        this.commandSender.sendMessage(message);
     }
 
     /** Helper methods **/
     private <T> T getArgument(int index, Class<T> type, T defaultValue) {
         if(index == -1 || index >= arguments.length) return defaultValue;
         String value = arguments[index];
-        Optional<T> optional = this.helper.parse(type, value);
+        Optional<T> optional = this.registry.parse(type, value);
         return optional.orElse(defaultValue);
     }
 
     private <T> Optional<T> getArgument(int index, Class<T> type, Predicate<T> predicate) {
         if(index == -1 || index >= arguments.length) return Optional.empty();
         String value = arguments[index];
-        Optional<T> optional = this.helper.parse(type, value);
+        Optional<T> optional = this.registry.parse(type, value);
         if(predicate != null) optional = optional.filter(predicate);
         return optional;
     }
@@ -134,13 +123,13 @@ public class CommandContext {
         int index = this.command.getIndexOf(parameterName);
         if(index == -1 || index >= this.arguments.length) {
             this.response(errorMessage);
-            throw new CommandExecutionException();
+            throw new AresCommandException();
         }
 
         Optional<T> optional = getArgument(index, type, predicate);
         if(optional.isEmpty()) {
             this.response(errorMessage);
-            throw new CommandExecutionException();
+            throw new AresCommandException();
         }
 
         return optional.get();
@@ -162,9 +151,13 @@ public class CommandContext {
         return this.requireArg(parameterName, type, null, Component.text("An unknown error occurred.", NamedTextColor.RED));
     }
 
+    public void response(Component message) {
+        this.commandSender.sendMessage(message);
+    }
+
     // Used to return the name of the sender with a function for player names specifically
     public Component senderFormattedName(Function<Player, Component> function) {
-        return this.senderFormattedName(function, () -> CONSOLE);
+        return this.senderFormattedName(function, () -> Component.text("CONSOLE", NamedTextColor.RED));
     }
 
     public Component senderFormattedName(Function<Player, Component> function, Supplier<Component> orFunction) {
@@ -182,6 +175,6 @@ public class CommandContext {
         }
 
         response(error);
-        throw new CommandExecutionException();
+        throw new AresCommandException();
     }
 }

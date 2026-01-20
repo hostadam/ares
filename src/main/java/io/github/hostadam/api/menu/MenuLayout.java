@@ -1,7 +1,6 @@
 package io.github.hostadam.api.menu;
 
 import io.github.hostadam.Ares;
-import io.github.hostadam.AresImpl;
 import io.github.hostadam.utilities.PaperUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -10,8 +9,6 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.inventory.InventoryType;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.logging.Level;
 
 @Getter
 public class MenuLayout {

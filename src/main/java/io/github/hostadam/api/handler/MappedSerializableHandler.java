@@ -4,7 +4,10 @@ import io.github.hostadam.api.persistance.Serializable;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
@@ -31,17 +34,9 @@ public abstract class MappedSerializableHandler<P extends JavaPlugin, K, S, V ex
         this.cache.remove(value.getKey());
     }
 
-    public void deleteBlocking(V value) {
-        this.delete(value, false);
-    }
-
     public void delete(V value, boolean async) {
         this.unregister(value);
         this.deleteRecord(value, async);
-    }
-
-    public void saveBlocking(V value) {
-        this.saveRecord(value, false);
     }
 
     public void saveRecord(V value, boolean async) {

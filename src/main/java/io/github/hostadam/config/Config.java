@@ -1,40 +1,41 @@
 package io.github.hostadam.config;
 
-import java.lang.reflect.Field;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public abstract class Config {
 
-    private final ConfigRegistry registry;
+    private final ConfigParser parser;
     protected final ConfigFile file;
 
-    public Config(ConfigRegistry registry, ConfigFile file) {
-        this.registry = registry;
+    public Config(ConfigParser parser, ConfigFile file) {
+        this.parser = parser;
         this.file = file;
     }
 
-    public void save() {
-        file.save();
+    private <T> void handleNoValue(String path, Class<T> clazz, Supplier<T> getter) {
+        T defaultValue = getter.get();
+        this.parser.addToConfig(this.file, path, clazz, defaultValue);
     }
 
-    public void load() {
-        for(Field field : this.getClass().getDeclaredFields()) {
-            if(!field.isAnnotationPresent(ConfigPath.class)) continue;
-            ConfigPath path = field.getAnnotation(ConfigPath.class);
-            if(!this.file.contains(path.value())) {
-                continue;
-            }
-
-            Object deserialized = this.registry.deserialize(field.getType(), this.file, path.value());
-            if(deserialized == null) continue;
-            try {
-                field.setAccessible(true);
-                field.set(this, deserialized);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
+    protected <T> void registerValue(String path, Class<T> clazz, Supplier<T> getter, Consumer<T> setter) {
+        if(!this.file.contains(path)) {
+            this.handleNoValue(path, clazz, getter);
+            return;
         }
 
-        this.postLoad();
+        Optional<T> value = this.parser.tryReadFromConfig(this.file, path, clazz);
+        if(value.isEmpty()) {
+            this.handleNoValue(path, clazz, getter);
+            return;
+        }
+
+        setter.accept(value.get());
+    }
+
+    public void save() {
+        this.file.save();
     }
 
     public void reload() {
@@ -42,5 +43,5 @@ public abstract class Config {
         this.load();
     }
 
-    public abstract void postLoad();
+    public abstract void load();
 }
