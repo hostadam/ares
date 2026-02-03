@@ -2,7 +2,6 @@ package io.github.hostadam.persistence.messages;
 
 import io.github.hostadam.persistence.Config;
 import io.github.hostadam.persistence.ConfigFile;
-import io.github.hostadam.persistence.ConfigParser;
 import net.kyori.adventure.text.Component;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -15,8 +14,8 @@ public class MessageConfig extends Config {
 
     private final Map<String, ParsedMessage> messages = new ConcurrentHashMap<>();
 
-    public MessageConfig(ConfigFile file, ConfigParser parser) {
-        super(file, parser);
+    public MessageConfig(ConfigFile file) {
+        super(file);
     }
 
     @Override

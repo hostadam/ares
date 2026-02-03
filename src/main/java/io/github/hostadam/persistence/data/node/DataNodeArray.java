@@ -16,6 +16,11 @@ public final class DataNodeArray implements DataNode {
     }
 
     @Override
+    public boolean isArray() {
+        return true;
+    }
+
+    @Override
     public DataNodeArray asArray() {
         return this;
     }

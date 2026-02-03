@@ -16,8 +16,33 @@ public final class DataNodeObject implements DataNode {
         return this.values.get(key);
     }
 
+    public String getString(String key) {
+        DataNode node = this.get(key);
+        return node.asString();
+    }
+
+    public double getDouble(String key) {
+        DataNode node = this.get(key);
+        return node.asDouble();
+    }
+
+    public float getFloat(String key) {
+        DataNode node = this.get(key);
+        return node.asFloat();
+    }
+
+    public float getFloat(String key, float defaultValue) {
+        DataNode node = this.get(key);
+        return node instanceof DataNodeValue value && value.raw() instanceof Number number ? number.floatValue() : defaultValue;
+    }
+
     public Set<String> keys() {
         return this.values.keySet();
+    }
+
+    @Override
+    public boolean isObject() {
+        return true;
     }
 
     @Override

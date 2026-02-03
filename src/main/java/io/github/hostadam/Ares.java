@@ -4,7 +4,6 @@ import io.github.hostadam.board.BoardHandler;
 import io.github.hostadam.persistence.Config;
 import io.github.hostadam.persistence.ConfigFile;
 import io.github.hostadam.persistence.messages.MessageConfig;
-import io.github.hostadam.persistence.serialization.ConfigTypeAdapter;
 import io.github.hostadam.utilities.item.ItemFactory;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;

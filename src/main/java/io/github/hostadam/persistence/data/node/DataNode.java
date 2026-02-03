@@ -9,6 +9,18 @@ public sealed interface DataNode permits DataNodeArray, DataNodeNull, DataNodeOb
         return false;
     }
 
+    default boolean isValue() {
+        return false;
+    }
+
+    default boolean isObject() {
+        return false;
+    }
+
+    default boolean isArray() {
+        return false;
+    }
+
     default String asString() {
         throw new IllegalStateException("Data node cannot be cast to string");
     }
@@ -19,6 +31,14 @@ public sealed interface DataNode permits DataNodeArray, DataNodeNull, DataNodeOb
 
     default int asInt() {
         throw new IllegalStateException("Data node cannot be cast to an int");
+    }
+
+    default double asDouble() {
+        throw new IllegalStateException("Data node cannot be cast to a double");
+    }
+
+    default float asFloat() {
+        throw new IllegalStateException("Data node cannot be cast to a float");
     }
 
     default boolean asBoolean() {

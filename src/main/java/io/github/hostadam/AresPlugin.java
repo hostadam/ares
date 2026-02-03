@@ -3,9 +3,7 @@ package io.github.hostadam;
 import io.github.hostadam.board.BoardHandler;
 import io.github.hostadam.persistence.Config;
 import io.github.hostadam.persistence.ConfigFile;
-import io.github.hostadam.persistence.ConfigParser;
 import io.github.hostadam.persistence.messages.MessageConfig;
-import io.github.hostadam.persistence.serialization.ConfigTypeAdapter;
 import io.github.hostadam.utilities.InputHandler;
 import io.github.hostadam.utilities.item.ItemFactory;
 import org.bukkit.entity.Player;
@@ -21,7 +19,6 @@ public class AresPlugin extends JavaPlugin implements Ares {
     private static Ares API;
 
     private ItemFactory itemFactory;
-    private ConfigParser configParser;
     private BoardHandler boardHandler;
     private InputHandler inputHandler;
 
@@ -52,8 +49,8 @@ public class AresPlugin extends JavaPlugin implements Ares {
     @Override
     public <T extends Config> T createConfig(ConfigFile file, Class<T> clazz) {
         try {
-            Constructor<T> constructor = clazz.getConstructor(ConfigFile.class, ConfigParser.class);
-            T instance = constructor.newInstance(file, this.configParser);
+            Constructor<T> constructor = clazz.getConstructor(ConfigFile.class);
+            T instance = constructor.newInstance(file);
             instance.load();
             return instance;
         } catch (InstantiationException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
