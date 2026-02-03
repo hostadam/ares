@@ -1,206 +1,143 @@
 package io.github.hostadam.utilities.item;
 
-import io.github.hostadam.utilities.PaperUtils;
-import com.google.common.collect.ImmutableMultimap;
-import io.github.hostadam.utilities.StringUtils;
+import io.github.hostadam.utilities.AdventureUtils;
 import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.datacomponent.DataComponentTypes;
-import io.papermc.paper.datacomponent.item.DyedItemColor;
-import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
-import io.papermc.paper.datacomponent.item.ItemLore;
-import io.papermc.paper.datacomponent.item.TooltipDisplay;
-import net.kyori.adventure.key.Key;
-import net.kyori.adventure.text.*;
-import net.kyori.adventure.text.flattener.ComponentFlattener;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
-import net.kyori.examination.Examiner;
-import org.bukkit.*;
+import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.inventory.*;
-import org.bukkit.inventory.meta.*;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Unmodifiable;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
-import java.util.function.*;
-import java.util.regex.MatchResult;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 public class ItemBuilder {
 
-    private ItemStack itemStack;
-    private Pattern regexPattern;
-
-    public ItemBuilder(ItemStack itemStack) {
-        this.itemStack = itemStack.clone();
-    }
+    private final ItemStack bukkitItem;
 
     public ItemBuilder(Material material) {
-        this.itemStack = new ItemStack(material, 1);
+        this(material, 1);
     }
 
-    public ItemBuilder switchWith(Material material) {
-        this.itemStack = this.itemStack.withType(material);
+    public ItemBuilder(Material material, int amount) {
+        this.bukkitItem = ItemStack.of(material, amount);
+    }
+
+    public ItemBuilder(ItemStack itemStack) {
+        this.bukkitItem = itemStack.clone();
+    }
+
+    public ItemBuilder withAmount(int amount) {
+        this.bukkitItem.setAmount(Math.min(amount, this.bukkitItem.getMaxStackSize()));
         return this;
     }
 
-    public ItemBuilder switchWith(ItemStack itemStack, Set<DataComponentType> excludedTypes) {
-        this.itemStack = this.itemStack.withType(itemStack.getType());
-        this.itemStack.setAmount(itemStack.getAmount());
-        this.itemStack.copyDataFrom(itemStack, dataComponentType -> !excludedTypes.contains(dataComponentType));
+    public ItemBuilder withName(String displayName) {
+        return this.withName(AdventureUtils.parseMiniMessage(displayName));
+    }
+
+    public ItemBuilder withName(Component component) {
+        this.bukkitItem.setData(DataComponentTypes.CUSTOM_NAME, component.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE));
         return this;
     }
 
-    public ItemBuilder amount(int amount) {
-        this.itemStack.setAmount(Math.min(amount, this.itemStack.getMaxStackSize()));
+    public ItemBuilder withLore(List<Component> lore) {
+        this.bukkitItem.lore(lore);
         return this;
     }
 
-    public ItemBuilder name(String displayName) {
-        this.name(PaperUtils.stringToComponent(displayName));
-        return this;
-    }
-
-    public ItemBuilder name(Component component) {
-        Component formatted = component.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
-        this.itemStack.setData(DataComponentTypes.CUSTOM_NAME, formatted);
-        return this;
-    }
-
-    public ItemBuilder lore(Component... components) {
-        List<Component> lore = this.itemStack.lore();
-        if(lore == null && components.length > 0) {
-            lore = new ArrayList<>();
-        }
-
+    public ItemBuilder withLore(Component... components) {
+        List<Component> lore = Optional.ofNullable(this.bukkitItem.lore()).orElseGet(ArrayList::new);
         for(Component component : components) {
             lore.add(component.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE));
         }
 
-        this.itemStack.lore(lore);
+        this.bukkitItem.lore(lore);
         return this;
     }
 
-    public ItemBuilder lore(List<Component> lore) {
-        this.itemStack.lore(lore.stream().map(component -> component.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE)).collect(Collectors.toList()));
-        return this;
-    }
-
-    public ItemBuilder glow() {
-        return this.glow(true);
-    }
-
-    public ItemBuilder glow(Boolean value) {
-        this.itemStack.setData(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, value);
-        return this;
-    }
-
-    public ItemBuilder maxStackSize(Integer amount) {
-        this.itemStack.setData(DataComponentTypes.MAX_STACK_SIZE, amount);
-        return this;
-    }
-
-    public ItemBuilder unbreakable() {
-        return this.unbreakable(true);
-    }
-
-    public ItemBuilder unbreakable(boolean shouldApply) {
-        if(shouldApply) {
-            this.itemStack.setData(DataComponentTypes.UNBREAKABLE);
-        } else this.itemStack.unsetData(DataComponentTypes.UNBREAKABLE);
-        return this;
-    }
-
-    public ItemBuilder enchant(Enchantment enchantment, int level) {
-        this.itemStack.addUnsafeEnchantment(enchantment, level);
-        return this;
-    }
-
-    public ItemBuilder dyeColor(Color color) {
-        this.itemStack.setData(DataComponentTypes.DYED_COLOR, DyedItemColor.dyedItemColor(color));
-        return this;
-    }
-
-    public ItemBuilder skull(String playerName) {
-        if(this.itemStack.hasItemMeta()) {
-            ItemMeta itemMeta = this.itemStack.getItemMeta();
-            if(itemMeta instanceof SkullMeta skullMeta) {
-                skullMeta.setOwner(playerName);
-                this.itemStack.setItemMeta(skullMeta);
-            }
+    public ItemBuilder withItemFlags(ItemFlag... flags) {
+        if(flags != null && flags.length > 0) {
+            this.bukkitItem.addItemFlags(flags);
         }
 
         return this;
     }
 
-    public ItemBuilder itemFlag(ItemFlag... flags) {
-        this.itemStack.addItemFlags(flags);
-        //this.itemMeta.setAttributeModifiers(ImmutableMultimap.of()); // Necessary on Paper
-        return this;
+    @Nullable
+    public <T> T retrieveData(DataComponentType.Valued<T> component) {
+        T currentData = this.bukkitItem.getData(component);
+        return currentData != null ? currentData : this.bukkitItem.getType().getDefaultData(component);
     }
 
-    public ItemBuilder durability(int durability) {
-        this.itemStack.setData(DataComponentTypes.DAMAGE, durability);
-        return this;
-    }
-
-    public ItemBuilder maxDurability(int durability) {
-        this.itemStack.setData(DataComponentTypes.MAX_DAMAGE, durability);
-        return this;
-    }
-
-    public ItemBuilder tooltip(boolean tooltip) {
-        if(tooltip) {
-            this.itemStack.unsetData(DataComponentTypes.TOOLTIP_DISPLAY);
+    public ItemBuilder removeData(DataComponentType.Valued<?> component, boolean resetToDefault) {
+        if(resetToDefault) {
+            this.bukkitItem.resetData(component);
         } else {
-            this.itemStack.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay().hideTooltip(true).build());
+            this.bukkitItem.unsetData(component);
         }
 
         return this;
     }
 
-    public ItemBuilder rarity(ItemRarity rarity) {
-        this.itemStack.setData(DataComponentTypes.RARITY, rarity);
+    public <T> ItemBuilder withData(DataComponentType.Valued<T> component, @NotNull T value) {
+        this.bukkitItem.setData(component, value);
         return this;
     }
 
-    public ItemBuilder copy() {
-        return new ItemBuilder(this.build());
+    public <T> ItemBuilder withDataOrIgnore(DataComponentType.Valued<T> component, @Nullable T value) {
+        if(value != null) {
+            this.bukkitItem.setData(component, value);
+        }
+
+        return this;
+    }
+
+    public ItemBuilder withData(DataComponentType.NonValued component, boolean value) {
+        if(value) {
+            this.bukkitItem.setData(component);
+        } else {
+            this.bukkitItem.unsetData(component);
+        }
+
+        return this;
+    }
+
+    public ItemBuilder withDataOrIgnore(DataComponentType.NonValued component, @Nullable Boolean value) {
+        if(value != null) {
+            return this.withData(component, value);
+        }
+
+        return this;
+    }
+
+    public ItemBuilder withDataFrom(ItemStack itemStack, Set<DataComponentType> excluded) {
+        this.bukkitItem.copyDataFrom(itemStack, type -> !excluded.contains(type));
+        return this;
+    }
+
+    public ItemBuilder withEnchant(Enchantment enchantment, int level) {
+        this.bukkitItem.addUnsafeEnchantment(enchantment, level);
+        return this;
+    }
+
+    public ItemBuilder withPlayerSkullSkin(String playerName) {
+        if(this.bukkitItem.hasItemMeta() && this.bukkitItem.getItemMeta() instanceof SkullMeta skullMeta) {
+            skullMeta.setOwner(playerName);
+            this.bukkitItem.setItemMeta(skullMeta);
+        }
+
+        return this;
     }
 
     public ItemStack build() {
-        return this.itemStack.clone();
-    }
-
-    public ItemStack fetchCurrentItem() {
-        return this.itemStack;
-    }
-
-    public ItemStack buildWithPlaceholders(Map<String, Component> placeholders) {
-        if(placeholders.isEmpty()) {
-            return this.build();
-        }
-
-        if(this.regexPattern == null) {
-            this.regexPattern = StringUtils.combinePattern(placeholders.keySet());
-        }
-
-        ItemStack cloned = this.itemStack.clone();
-        Component displayName = cloned.effectiveName();
-        List<Component> lore = cloned.lore();
-        UnaryOperator<Component> replacer = PaperUtils.configureReplacementOperator(this.regexPattern, placeholders);
-
-        cloned.setData(DataComponentTypes.CUSTOM_NAME, replacer.apply(displayName).decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE));
-
-        if(lore != null && !lore.isEmpty()) {
-            cloned.lore(lore.stream().map(replacer).collect(Collectors.toList()));
-        }
-
-        return cloned;
-    }
-
-    public static ItemStack create(Material material, String displayName) {
-        return new ItemBuilder(material).name(displayName).build();
+        return this.bukkitItem.clone();
     }
 }

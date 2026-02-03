@@ -15,38 +15,14 @@ import org.bukkit.util.NumberConversions;
 import java.util.Map;
 import java.util.Objects;
 
-public class SafeLocation implements ConfigurationSerializable {
-
-    private final String worldName;
-    private final double x;
-    private final double y;
-    private final double z;
-    @Getter
-    private final ChunkKey chunkKey;
-
-    public SafeLocation(String worldName, double x, double y, double z) {
-        this.worldName = worldName;
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.chunkKey = ChunkKey.of(this);
-    }
-
-    public SafeLocation(Map<String, Object> map) {
-        this((String) map.get("world"), (double) map.get("x"), (double) map.get("y"), (double) map.get("z"));
-    }
+public record SafeLocation(String worldName, double x, double y, double z) implements ConfigurationSerializable {
 
     public SafeLocation(ConfigurationSection section) {
         this(section.getString("world"), section.getDouble("x"), section.getDouble("y"), section.getDouble("z"));
     }
 
-    public SafeLocation(String string) {
-        String[] split = string.split(",");
-        this.worldName = split[0];
-        this.x = Double.parseDouble(split[1]);
-        this.y = Double.parseDouble(split[2]);
-        this.z = Double.parseDouble(split[3]);
-        this.chunkKey = ChunkKey.of(this);
+    public SafeChunk chunk() {
+        return SafeChunk.of(this);
     }
 
     public int distanceTo(SafeLocation other) {
@@ -94,7 +70,7 @@ public class SafeLocation implements ConfigurationSerializable {
     }
 
     public boolean isSafe() {
-        return this.chunkKey.isLoaded();
+        return this.chunk().isLoaded();
     }
 
     public SafeLocation centralize() {
@@ -109,14 +85,6 @@ public class SafeLocation implements ConfigurationSerializable {
 
     public World getWorld() {
         return Bukkit.getWorld(this.worldName);
-    }
-
-    public static SafeLocation of(Location location) {
-        return new SafeLocation(location.getWorld().getName(), location.getX(), location.getY(), location.getZ());
-    }
-
-    public static SafeLocation of(Block block) {
-        return of(block.getLocation());
     }
 
     public String saveAsString() {
@@ -146,5 +114,18 @@ public class SafeLocation implements ConfigurationSerializable {
                 && this.blockY() == safeLocation.blockY()
                 && this.blockZ() == safeLocation.blockZ()
                 && (Objects.equals(worldName, safeLocation.worldName));
+    }
+
+    public static SafeLocation of(String string) {
+        String[] split = string.split(",");
+        return new SafeLocation(split[0], Double.parseDouble(split[1]), Double.parseDouble(split[2]), Double.parseDouble(split[3]));
+    }
+
+    public static SafeLocation of(Location location) {
+        return new SafeLocation(location.getWorld().getName(), location.getX(), location.getY(), location.getZ());
+    }
+
+    public static SafeLocation of(Block block) {
+        return of(block.getLocation());
     }
 }

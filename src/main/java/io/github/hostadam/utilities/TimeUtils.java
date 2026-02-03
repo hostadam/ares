@@ -1,104 +1,123 @@
 package io.github.hostadam.utilities;
 
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import com.google.common.primitives.Ints;
+import lombok.NoArgsConstructor;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+
+@NoArgsConstructor
 public class TimeUtils {
 
-    private static final Map<Character, Long> TIME_UNITS = Map.of(
-            's', 1000L,
-            'm', 60 * 1000L,
-            'h', 60 * 60 * 1000L,
-            'd', 24 * 60 * 60 * 1000L,
-            'w', 7 * 24 * 60 * 60 * 1000L,
-            'M', 30 * 24 * 60 * 60 * 1000L,
-            'y', 365 * 24 * 60 * 60 * 1000L
-    );
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final Map<Character, Duration> TIME_UNITS = new LinkedHashMap<>(); // Ordered from largest to smallest for formatting
 
-    public static long parseTime(String string) {
-        String input = string.toLowerCase();
-        if(input.contains("perm") || input.equalsIgnoreCase("lifetime") )return Long.MAX_VALUE;
-
-        long totalMillis = 0L;
-        int start = 0;
-        boolean found = false;
-
-        for(int index = 0; index < input.length(); index++) {
-            char charAt = input.charAt(index);
-            if(!TIME_UNITS.containsKey(charAt)) continue;
-
-            try {
-                int value = Integer.parseInt(input.substring(start, index));
-                totalMillis += value * TIME_UNITS.get(charAt);
-                start = index + 1;
-                found = true;
-            } catch (Exception ignored) {}
+    public static Optional<LocalDateTime> parseDate(String string) {
+        if(string == null) return Optional.empty();
+        try {
+            return Optional.of(LocalDateTime.parse(string, DATE_FORMAT));
+        } catch (DateTimeParseException exception) {
+            return Optional.empty();
         }
-
-        return found ? (totalMillis + 1L) : -1;
     }
 
-    public static String format(int time) {
-        int sec = time % 60;
-        int min = time / 60 % 60;
-        int hrs = time / 3600 % 24;
+    public static String formatDate(LocalDateTime date) {
+        return date.format(DATE_FORMAT);
+    }
+
+    public static Optional<Duration> parseDuration(String string) {
+        if(string.toLowerCase().contains("perm")
+                || string.equalsIgnoreCase("lifetime")) {
+            return Optional.empty();
+        }
+
+        Duration total = Duration.ZERO;
+        int startIndex = 0;
+        boolean found = false;
+
+        for(int i = 0; i < string.length(); i++) {
+            Duration unit = TIME_UNITS.get(string.charAt(i));
+            if(unit == null) continue;
+            String timeAsString = string.substring(startIndex, i);
+            Integer value = Ints.tryParse(timeAsString);
+            if(value == null) continue;
+            total = total.plus(unit.multipliedBy(value.longValue()));
+            startIndex = i + 1;
+            found = true;
+        }
+
+        return found ? Optional.of(total) : Optional.empty();
+    }
+
+    public static String formatDuration(Duration duration) {
+        StringBuilder output = new StringBuilder();
+
+        for(Map.Entry<Character, Duration> entry : TIME_UNITS.entrySet()) {
+            Duration unit = entry.getValue();
+            long amount = duration.toSeconds() / unit.toSeconds();
+            if(amount <= 0) {
+                output.append(amount).append(entry.getKey());
+                duration = duration.minus(duration.multipliedBy(amount));
+            }
+        }
+
+        return output.isEmpty() ? "0s" : output.toString();
+    }
+
+    public static String toBasicString(int timeInSeconds) {
+        int sec = timeInSeconds % 60;
+        int min = timeInSeconds / 60 % 60;
+        int hrs = timeInSeconds / 3600 % 24;
         return (hrs > 0 ? hrs + ":" : "") + String.format("%02d:%02d", min, sec);
     }
 
-    public static String format(long duration, boolean compact) {
-        if (duration == Long.MAX_VALUE) return "Permanent";
-        long seconds = duration / 1000;
-        long mins = seconds / 60; seconds %= 60;
-        long hrs = mins / 60; mins %= 60;
-        long days = hrs / 24; hrs %= 24;
+    public static String toString(Duration duration, boolean restrictUnits, boolean abbreviateUnits) {
+        long days = duration.toDaysPart();
+        long hours = duration.toHoursPart();
+        long minutes = duration.toMinutesPart();
+        long seconds = duration.toSecondsPart();
 
         StringBuilder sb = new StringBuilder();
-        append(sb, days, compact, "d", "day");
-        append(sb, hrs, compact, "h", "hour");
-        append(sb, mins, compact, "m", "minute");
-        append(sb, seconds, compact, "s", "second");
+        append(sb, days, abbreviateUnits, "d", "day");
+        append(sb, hours, abbreviateUnits, "h", "hour");
 
-        return !sb.isEmpty() ? sb.toString() : "0s";
-    }
-
-    public static String formatSimple(long duration, boolean compact) {
-        if (duration == Long.MAX_VALUE) return "Permanent";
-        long seconds = duration / 1000;
-        long mins = seconds / 60; seconds %= 60;
-        long hrs = mins / 60; mins %= 60;
-        long days = hrs / 24; hrs %= 24;
-
-        StringBuilder sb = new StringBuilder();
-        if(days > 0) {
-            append(sb, days, compact, "d", "day");
+        if(!restrictUnits || (days <= 0 || hours <= 0)) {
+            append(sb, minutes, abbreviateUnits, "m", "minute");
         }
 
-        if(hrs > 0) {
-            append(sb, hrs, compact, "h", "hour");
-        }
-
-        if(mins > 0 && (days <= 0 || hrs <= 0)) {
-            append(sb, mins, compact, "m", "minute");
-        }
-
-        if(seconds > 0 && (days <= 0 && hrs <= 0 && mins <= 0)) {
-            append(sb, seconds, compact, "s", "second");
+        if(!restrictUnits || (days <= 0 && hours <= 0 && minutes <= 0)) {
+            append(sb, seconds, abbreviateUnits, "s", "second");
         }
 
         return !sb.isEmpty() ? sb.toString() : "0s";
     }
 
-    public static String format(long duration) {
-        return format(duration, false);
+    private static void append(StringBuilder builder, long amount, boolean abbreviateUnits, String abbreviatedName, String fullName) {
+        if(amount <= 0) return;
+
+        if(!builder.isEmpty()) {
+            builder.append(" ");
+        }
+
+        builder.append(amount);
+        if(abbreviateUnits) {
+            builder.append(abbreviatedName);
+        } else {
+            builder.append(" ").append(fullName).append(amount == 1 ? "" : "s");
+        }
     }
 
-    private static void append(StringBuilder builder, long amount, boolean compact, String compactString, String nonCompactString) {
-        if(amount > 0) {
-            if(!builder.isEmpty()) {
-                builder.append(" ");
-            }
-
-            builder.append(amount).append(compact ? compactString : amount == 1 ? " " + nonCompactString : " " + nonCompactString + "s");
-        }
+    static {
+        TIME_UNITS.put('M', Duration.ofDays(30));
+        TIME_UNITS.put('w', Duration.ofDays(7));
+        TIME_UNITS.put('d', Duration.ofDays(1));
+        TIME_UNITS.put('h', Duration.ofHours(1));
+        TIME_UNITS.put('m', Duration.ofMinutes(1));
+        TIME_UNITS.put('s', Duration.ofSeconds(1));
     }
 }

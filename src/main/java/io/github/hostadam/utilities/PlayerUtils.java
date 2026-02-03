@@ -1,41 +1,28 @@
 package io.github.hostadam.utilities;
 
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Objects;
 import java.util.UUID;
 
 public class PlayerUtils {
 
-    public static Player getDamager(Entity entity) {
+    public static Player findDamagerFromEntity(Entity entity) {
         if(entity instanceof Player player) return player;
         if(entity instanceof Projectile projectile && projectile.getShooter() instanceof Player player) return player;
         return null;
     }
 
-    public static OfflinePlayer getOfflinePlayer(String name) {
-        return Bukkit.getOfflinePlayerIfCached(name);
-    }
-
-    /**
-     * Get the offline player from an uuid. A new offline player instance is created when using the Bukkit method.
-     * Therefore, we return the offline player as null if they have never been on the server before.
-     *
-     * @param uniqueId the uuid of the player
-     * @return the offline player
-     */
     public static OfflinePlayer getOfflinePlayer(UUID uniqueId) {
         OfflinePlayer player = Bukkit.getOfflinePlayer(uniqueId);
         return (player.hasPlayedBefore() || player.isOnline()) ? player : null;
@@ -97,26 +84,5 @@ public class PlayerUtils {
 
     public static void giveItems(Player player, ItemStack[] items) {
         Arrays.stream(items).filter(Objects::nonNull).forEach(itemStack -> giveItem(player, itemStack));
-    }
-
-    public static void broadcast(String permission, String message) {
-        Bukkit.getOnlinePlayers().stream()
-                .filter(player -> player.hasPermission(permission))
-                .forEach(player -> player.sendMessage(message));
-    }
-
-    public static void connectPlayer(JavaPlugin plugin, Player player, String server) {
-        ByteArrayDataOutput output = ByteStreams.newDataOutput();
-        output.writeUTF("Connect");
-        output.writeUTF(server);
-        player.sendPluginMessage(plugin, "BungeeCord", output.toByteArray());
-    }
-
-    public static void kickPlayer(JavaPlugin plugin, OfflinePlayer target, String reason) {
-        ByteArrayDataOutput output = ByteStreams.newDataOutput();
-        output.writeUTF("KickPlayer");
-        output.writeUTF(target.getName());
-        output.writeUTF(reason);
-        Bukkit.getServer().sendPluginMessage(plugin, "BungeeCord", output.toByteArray());
     }
 }
