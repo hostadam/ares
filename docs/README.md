@@ -3,8 +3,9 @@ Ares is a plugin library designed to provide developers with easy access to mult
 It is specifically developed to be compatible with Paper with no guarantees for Bukkit, Spigot or Folia compatibility.
 
 ### Features
-* Exclusively adapted for Paper (e.g. use of Adventure)
-* Automatic YAML config parsing
+* Easy-to-use Config library for reading and writing to YAML files with ease
+
+* 
 * Optimized Scoreboard API
 * Player tab list ordering
 * Intuitive Command API
@@ -34,28 +35,66 @@ If you wish to hook into Ares to use its features, add the following to your pro
 ```
 
 ## Initializing Ares
-Ares is a standalone plugin. You do not need to initialize it in order to use it. Simply put it in your server's /plugins folder and start the server.
-To access the API:
+Ares is a standalone plugin. To make it work, you need to put in your server's plugins folder and start the server.
+The API is easily accessible using the provided method:
 ```java
-Ares ares = AresPlugin.api();
+Ares ares = Ares.api();
 ```
 
-## Custom Configs & Messages
-Ares has an integrated configuration system that can deserialize your files with ease. To create a config:
+## Custom Configs
+Ares has an integrated configuration system that can read your config files with ease. 
+
+Initialize a config file, create the Config and load it.
 ```java
-ConfigFile file = new ConfigFile(this, "config");
-ExampleConfig config = ares.createConfig(file, ExampleConfig.class);
+ConfigFile file = new ConfigFile(this, "config.yml");
+AresConfig config = ares.createConfig(file, AresConfig.class);
+config.load();
 ```
-This will automatically create and load the configuration. If you wish to add a custom deserializer that Ares does not support by default, it's very easy:
+
+The ```AresConfig.class``` is the actual configuration object. Below is an example of how this may look.
 ```java
-this.ares.registerConfigAdapter(Tag.class, new ConfigTypeAdapter<>(Tag::serialize, object -> {
-    if(object instanceof ConfigurationSection section) {
-        Tag tag = new Tag(section);
-        return Optional.of(tag);
+public class AresConfig extends Config {
+
+    // Example config: represents the server's name
+    public String serverName;
+    // Example config: represents whether players can connect to the server
+    public boolean allowConnections;
+
+    public AresConfig(ConfigFile file) {
+        super(file);
     }
-    
-    return Optional.empty();
-}));
+
+    @Override
+    public void load() {
+        this.serverName = this.read("settings.server-name", DataCodecs.STRING, () -> "test"); // default value is 'test'
+        this.allowConnections = this.read("settings.allow-connections", DataCodecs.BOOLEAN, () -> true); // default value is true
+    }
+}
+```
+The DataCodecs class contains an extensive set of pre-made readers. 
+If you wish to add your own, we recommend using the ```DataCodecs.value()```, ```DataCodecs.map()``` and ```DataCodecs.arrayOf()``` methods for simpler codecs.
+For more complex objects, the DataCodecBuilder is the best alternative and can be initialized using the ```DataCodec.newBuilder()``` method.
+
+## Built-in Messages
+Extending the Config system, Ares also features a built-in system for parsing, caching and sending configurable messages.
+It is extremely simple to use.
+```java
+ConfigFile file = new ConfigFile(this, "messages.yml");
+MessageConfig messageConfig = ares.createMessageConfig(file);
+messageConfig.load();
+```
+Ares will automatically read all messages in any provided YAML file as MiniMessage strings, construct Adventure components from them, and cache them.
+To retrieve any message, simply use the ```messageConfig.message()``` method.
+
+Below is an example of this system in use:
+```java
+this.messageConfig.message("general.player-kicked")
+    .withPlaceholder("player", Component.text(player.getName())
+    .withPlaceholder("reason", Component.text(reason))
+    .broadcast();
+```
+```yaml
+player-kicked: "<red><b>{player}</b> has been kicked from the server for {reason}.</red>
 ```
 
 ## Scoreboard API
