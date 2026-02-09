@@ -39,6 +39,8 @@ import java.util.function.Predicate;
 
 public class ServerUtils {
 
+    private ServerUtils() {}
+
     public static Optional<Location> generateRandomLocation(World world, int minX, int minZ, int maxX, int maxZ, int maxAttempts, Predicate<Location> condition) {
         for(int attempt = 0; attempt < maxAttempts; attempt++) {
             int x = ThreadLocalRandom.current().nextInt(minX, maxX);

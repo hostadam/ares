@@ -40,10 +40,13 @@ import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class AdventureUtils {
+
+    private AdventureUtils() {}
 
     public static final MiniMessage MINI_MESSAGE_PARSER = MiniMessage.builder()
             .tags(TagResolver.builder().resolvers(StandardTags.defaults(),
@@ -142,4 +145,10 @@ public class AdventureUtils {
                 .append(Component.text(" " + (int) (ratio * 100) + "%", NamedTextColor.WHITE))
                 .build();
     }
+
+    public static Component formatPercentage(double d) {
+        int percentage = (int) Math.round(d * 100);
+        return Component.text(percentage + "%", (percentage > 90 ? NamedTextColor.DARK_GREEN : percentage > 0.5 ? NamedTextColor.GREEN : percentage > 0.10 ? NamedTextColor.YELLOW : percentage > 0.5 ? NamedTextColor.RED : NamedTextColor.DARK_RED));
+    }
+
 }

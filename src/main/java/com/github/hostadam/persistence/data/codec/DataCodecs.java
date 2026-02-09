@@ -42,26 +42,27 @@ import java.util.function.Function;
 
 public class DataCodecs {
 
-    public static final DataCodec<String> STRING_CODEC = primitive(String.class);
-    public static final DataCodec<List<String>> STRING_LIST_CODEC = arrayOf(STRING_CODEC);
+    public static final DataCodec<String> STRING = primitive(String.class);
+    public static final DataCodec<List<String>> STRING_LIST = arrayOf(STRING);
 
-    public static final DataCodec<Integer> INT_CODEC = primitive(Integer.class);
-    public static final DataCodec<Long> LONG_CODEC = primitive(Long.class);
-    public static final DataCodec<Boolean> BOOLEAN_CODEC = primitive(Boolean.class);
-    public static final DataCodec<Double> DOUBLE_CODEC = primitive(Double.class);
-    public static final DataCodec<Float> FLOAT_CODEC = primitive(Float.class);
-    public static final DataCodec<World> WORLD_CODEC = map(STRING_CODEC, World::getName, Bukkit::getWorld);
-    public static final DataCodec<UUID> UUID_CODEC = map(STRING_CODEC, UUID::toString, UUID::fromString);
-    public static final DataCodec<Component> COMPONENT_CODEC = map(STRING_CODEC, AdventureUtils::convertComponentToJsonString, AdventureUtils::convertJsonStringToComponent);
-    public static final DataCodec<LocalDateTime> DATE_CODEC = map(STRING_CODEC, TimeUtils::formatDate, string -> TimeUtils.parseDate(string).orElse(null));
-    public static final DataCodec<Duration> DURATION_CODEC = value(
+    public static final DataCodec<Integer> INT = primitive(Integer.class);
+    public static final DataCodec<Long> LONG = primitive(Long.class);
+    public static final DataCodec<Boolean> BOOLEAN = primitive(Boolean.class);
+    public static final DataCodec<Double> DOUBLE = primitive(Double.class);
+    public static final DataCodec<Float> FLOAT = primitive(Float.class);
+
+    public static final DataCodec<World> MINECRAFT_WORLD = map(STRING, World::getName, Bukkit::getWorld);
+    public static final DataCodec<UUID> UUID_V4 = map(STRING, UUID::toString, UUID::fromString);
+    public static final DataCodec<Component> COMPONENT = map(STRING, AdventureUtils::convertComponentToJsonString, AdventureUtils::convertJsonStringToComponent);
+    public static final DataCodec<LocalDateTime> DATE = map(STRING, TimeUtils::formatDate, string -> TimeUtils.parseDate(string).orElse(null));
+    public static final DataCodec<Duration> DURATION = value(
             duration -> DataNode.value(duration.toMillis()),
             dataNode -> {
                 if(!(dataNode instanceof DataNodeValue value)) return null;
                 return value.isNumber() ? Duration.ofMillis(value.asLong()) : TimeUtils.parseDuration(value.asString()).orElse(null);
             }
     );
-    public static final DataCodec<Location> LOCATION_CODEC =
+    public static final DataCodec<Location> LOCATION =
             DataCodec.newBuilder(object -> {
                 String worldName = object.getString("world");
                 World world = Bukkit.getWorld(worldName);
@@ -76,12 +77,12 @@ public class DataCodecs {
                 float pitch = object.getFloat("pitch", 0.0f);
                 return new Location(world, x, y, z, yaw, pitch);
             })
-            .add("world", WORLD_CODEC, Location::getWorld)
-            .add("x", DOUBLE_CODEC, Location::getX)
-            .add("y", DOUBLE_CODEC, Location::getY)
-            .add("y", DOUBLE_CODEC, Location::getZ)
-            .add("yaw", FLOAT_CODEC, Location::getYaw)
-            .add("pitch", FLOAT_CODEC, Location::getPitch)
+            .add("world", MINECRAFT_WORLD, Location::getWorld)
+            .add("x", DOUBLE, Location::getX)
+            .add("y", DOUBLE, Location::getY)
+            .add("y", DOUBLE, Location::getZ)
+            .add("yaw", FLOAT, Location::getYaw)
+            .add("pitch", FLOAT, Location::getPitch)
             .build();
 
     private static <T> DataCodec<T> primitive(Class<T> classType) {

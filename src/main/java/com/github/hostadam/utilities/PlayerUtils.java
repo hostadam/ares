@@ -40,6 +40,8 @@ import java.util.UUID;
 
 public class PlayerUtils {
 
+    private PlayerUtils() {}
+
     public static Player findDamagerFromEntity(Entity entity) {
         if(entity instanceof Player player) return player;
         if(entity instanceof Projectile projectile && projectile.getShooter() instanceof Player player) return player;

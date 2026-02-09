@@ -38,7 +38,7 @@ public abstract class Config {
      * @param path - the config path
      * @param value - the value
      */
-    protected <T> void write(DataCodec<T> codec, String path, T value) {
+    protected <T> void write(String path, DataCodec<T> codec, T value) {
         Preconditions.checkNotNull(value, "Value may not be null");
 
         DataNode dataNode = codec.encode(value);
@@ -53,14 +53,14 @@ public abstract class Config {
      * @param path - the config path
      * @param defaultSupplier - a fallback supplier if the value is absent
      */
-    protected <T> T read(ConfigFile file, DataCodec<T> codec, String path, Supplier<T> defaultSupplier) {
-        Object value = file.get().get(path);
+    protected <T> T read(String path, DataCodec<T> codec, Supplier<T> defaultSupplier) {
+        Object value = this.file.get().get(path);
         if(value != null) {
             return codec.decode(YamlDataNodeAdapter.INSTANCE.read(value));
         }
 
         T defaultValue = defaultSupplier.get();
-        write(codec, path, defaultValue);
+        write(path, codec, defaultValue);
         return defaultValue;
     }
 

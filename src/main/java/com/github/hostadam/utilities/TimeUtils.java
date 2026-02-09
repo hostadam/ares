@@ -24,7 +24,6 @@
 package com.github.hostadam.utilities;
 
 import com.google.common.primitives.Ints;
-import lombok.NoArgsConstructor;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -34,10 +33,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
-@NoArgsConstructor
 public class TimeUtils {
 
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private TimeUtils() {}
+
+    private static final DateTimeFormatter DATE_FORMAT
+            = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final Map<Character, Duration> TIME_UNITS = new LinkedHashMap<>(); // Ordered from largest to smallest for formatting
 
     public static Optional<LocalDateTime> parseDate(String string) {
@@ -92,28 +93,28 @@ public class TimeUtils {
         return output.isEmpty() ? "0s" : output.toString();
     }
 
-    public static String toBasicString(int timeInSeconds) {
+    public static String secondsToBasicString(int timeInSeconds) {
         int sec = timeInSeconds % 60;
         int min = timeInSeconds / 60 % 60;
         int hrs = timeInSeconds / 3600 % 24;
         return (hrs > 0 ? hrs + ":" : "") + String.format("%02d:%02d", min, sec);
     }
 
-    public static String toString(Duration duration, boolean restrictUnits, boolean abbreviateUnits) {
+    public static String durationToString(Duration duration, boolean restrictUnits, boolean abbreviateUnits) {
         long days = duration.toDaysPart();
         long hours = duration.toHoursPart();
         long minutes = duration.toMinutesPart();
         long seconds = duration.toSecondsPart();
 
         StringBuilder sb = new StringBuilder();
-        append(sb, days, abbreviateUnits, "d", "day");
-        append(sb, hours, abbreviateUnits, "h", "hour");
+        if(days > 0) append(sb, days, abbreviateUnits, "d", "day");
+        if(hours > 0) append(sb, hours, abbreviateUnits, "h", "hour");
 
-        if(!restrictUnits || (days <= 0 || hours <= 0)) {
+        if(minutes > 0 && (!restrictUnits || (days <= 0 || hours <= 0))) {
             append(sb, minutes, abbreviateUnits, "m", "minute");
         }
 
-        if(!restrictUnits || (days <= 0 && hours <= 0 && minutes <= 0)) {
+        if(seconds > 0 && (!restrictUnits || (days <= 0 && hours <= 0 && minutes <= 0))) {
             append(sb, seconds, abbreviateUnits, "s", "second");
         }
 
@@ -121,8 +122,6 @@ public class TimeUtils {
     }
 
     private static void append(StringBuilder builder, long amount, boolean abbreviateUnits, String abbreviatedName, String fullName) {
-        if(amount <= 0) return;
-
         if(!builder.isEmpty()) {
             builder.append(" ");
         }

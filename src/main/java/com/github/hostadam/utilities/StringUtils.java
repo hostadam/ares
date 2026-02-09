@@ -32,14 +32,22 @@ import java.util.regex.Pattern;
 
 public class StringUtils {
 
-    private static final Pattern PUA_PATTERN = Pattern.compile("[\uE000-\uF8FF]|[\uDB80-\uDBBF][\uDC00-\uDFFF]|[\uDBC0-\uDBFF][\uDC00-\uDFFF]");
+    private StringUtils() {}
+
     private static final Pattern ALPHANUMERIC_PATTERN = Pattern.compile("\\p{Alnum}+");
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.##");
-    private static final Map<Character, Character> DIGIT_MAPPER = Map.of('0', 'o', '1', 'i', '2', 'z', '3', 'e', '4', 'a', '5', 's', '6', 'g', '7', 't', '8', 'b', '9', 'p');
-
-    public static Component replaceIllegalCharacters(Component component) {
-        return component.replaceText(config -> config.match(PUA_PATTERN).replacement(""));
-    }
+    private static final Map<Character, Character> DIGIT_MAPPER = Map.of(
+            '0', 'o',
+            '1', 'i',
+            '2', 'z',
+            '3', 'e',
+            '4', 'a',
+            '5', 's',
+            '6', 'g',
+            '7', 't',
+            '8', 'b',
+            '9', 'p'
+    );
 
     public static String convertNumbersToCharacter(String input) {
         StringBuilder builder = new StringBuilder();
@@ -48,11 +56,6 @@ public class StringUtils {
         }
 
         return builder.toString();
-    }
-
-    public static Component formatPercentage(double d) {
-        int percentage = (int) Math.round(d * 100);
-        return Component.text(percentage + "%", (percentage > 90 ? NamedTextColor.DARK_GREEN : percentage > 0.5 ? NamedTextColor.GREEN : percentage > 0.10 ? NamedTextColor.YELLOW : percentage > 0.5 ? NamedTextColor.RED : NamedTextColor.DARK_RED));
     }
 
     public static String formatBigNumeric(double value) {
